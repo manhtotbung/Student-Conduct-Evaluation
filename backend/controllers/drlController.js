@@ -1,6 +1,6 @@
 import pool from '../db.js';
 import { toNum} from '../utils/helpers.js';
-import { getCriteria } from '../models/drlModel.js';
+import { getCriteria, getSelfAssessment_student, getStudentID } from '../models/drlModel.js';
 
 export const getCriteriaController = async (req, res) => {
   const { term } = req.query;
@@ -15,31 +15,31 @@ export const getCriteriaController = async (req, res) => {
   }
 };
 
-export const getSelfAssessment = async (req, res, next) => {
-    const { student_code, term } = req.query || {};
-    if (!student_code || !term) return res.status(400).json({ error: 'Không tìm thấy MSV hoặc học kì' });
+export const getSelfAssessment = async (req, res) => {
+  //lấy từ url vd: GET /api/drl/self?student_code=SV001&term=2024-1 thì query  lấy thành object {student_code,....}
+  //term: mã học kỳ  
+  const { student_code, term } = req.query || {}; 
+    if (!student_code || !term) 
+  return res.status(400).json({ error: 'Không tìm thấy MSV hoặc học kì' });
 
     try {
         // Lấy student_id từ student_code
-        const studentRes = await pool.query('SELECT id FROM ref.student WHERE student_code = $1', [student_code.trim()]);
-        if (!studentRes.rowCount) {
-            return res.status(404).json({ error: 'student_not_found' });
+        const studentRes = await getStudentID(student_code);
+        if (!studentRes) {
+            return res.status(404).json({ error: 'không tìm thấy học sinh' });
         }
-        const student_id = studentRes.rows[0].id;
+        const student_id = studentRes.id;
 
         // Lấy dữ liệu tự đánh giá
-        const { rows } = await pool.query(`
-        SELECT sa.criterion_id, sa.option_id, sa.text_value, sa.self_score,
-                sa.is_hsv_verified, sa.hsv_note
-        FROM drl.self_assessment sa
-        WHERE sa.student_id = $1 AND sa.term_code = $2
-        ORDER BY sa.criterion_id
-        `, [student_id, term]);
-
-        res.json(rows);
+        const selfStudentAcess = await getSelfAssessment_student(student_id, term);
+        if(!selfStudentAcess)
+        {
+         return res.status(404).json({ error: 'không tìm thấy HS tự đánh giá' }); 
+        }
+         res.json(selfStudentAcess);
     } catch (err) {
-        console.error('Get Self Assessment Error:', err);
-        next(err);
+        console.error(' lỗi ở GetSelfAssessment: drlController', err);
+        
     }
 };
 

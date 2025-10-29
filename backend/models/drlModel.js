@@ -28,11 +28,26 @@ export const getCriteria = async (term) =>{
 };
 
 //Lấy id theo mã sinh viên
-export const getStudentID = async (student_code) =>{
-  const query = 'select id from ref.student where student_code = $1'
-
-  const result = (await pool.query(query,[student_code]));
-  return result.rows[0]; 
+export const getStudentID = async (student_code) => {
+  const code = (student_code ?? '').trim();
+  const query = `
+    SELECT id
+    FROM ref.student
+    WHERE lower(student_code) = lower($1)
+    LIMIT 1
+  `;
+  //$! = [code]
+/* rows trả về
+{
+  command: 'SELECT',
+  rowCount: 1,
+  oid: null,
+  rows: [ { id: 1, name: 'Nguyen Van A', age: 20 } ],
+  fields: [ ... ]
+}
+*/
+  const { rows } = await pool.query(query, [code]);
+  return rows[0] || null; // { id } hoặc null
 };
 
 //Lấy danh sách tự đánh giá của sinh viên
@@ -41,6 +56,7 @@ export const getSelfAssessment_student = async (student_id,term) =>{
     from drl.self_assessment sa
     where sa.student_id = $1 and sa.term_code = $2
     order by sa.criterion_id;
-  `
-
+  `;
+  const { rows } = await pool.query(query,[student_id, term]);
+  return rows || null; 
 };
