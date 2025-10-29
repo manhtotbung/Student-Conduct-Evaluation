@@ -23,7 +23,7 @@ export const getSelfAssessment = async (req, res) => {
     try {
         // Lấy dữ liệu tự đánh giá
         const rows = await getSelfAssessment_student(student_code,term);
-        if (rows == []) {
+        if (rows.length == 0) {
             return res.status(404).json({ error: 'Không tìm thấy MSV hoặc học kì' });
         }
         res.json(rows);
@@ -33,34 +33,13 @@ export const getSelfAssessment = async (req, res) => {
     }
 };
 
-export const saveSelfAssessment = async (req, res, next) => {
+export const saveSelfAssessment = async (req, res) => {
   const { student_code, term_code, items } = req.body || {};
-  // --- Thêm kiểm tra đầu vào cơ bản ---
   if (!student_code || !term_code || !Array.isArray(items)) {
     return res.status(400).json({ error: 'missing_body_or_items_invalid' });
   }
-  // --- Hết kiểm tra ---
 
-  const client = await pool.connect();
   try {
-    // --- Kiểm tra kỳ học có mở không ---
-    const termStatusRes = await client.query(
-      'SELECT is_assessment_open FROM ref.term WHERE code = $1',
-      [term_code]
-    );
-
-    if (termStatusRes.rowCount === 0) {
-      // Không cần rollback vì chưa BEGIN
-      return res.status(404).json({ error: 'term_not_found' });
-    }
-
-    if (termStatusRes.rows[0].is_assessment_open !== true) {
-      // Không cần rollback
-      return res.status(403).json({ error: 'assessment_period_closed' });
-    }
-    // --- Hết kiểm tra kỳ học ---
-
-    await client.query('BEGIN'); // Bắt đầu Transaction
 
     // --- Lấy student_id ---
     const sidRes = await client.query(`SELECT id FROM ref.student WHERE student_code = $1`, [student_code.trim()]);
@@ -70,23 +49,6 @@ export const saveSelfAssessment = async (req, res, next) => {
     }
     const student_id = sidRes.rows[0].id;
     // --- Hết lấy student_id ---
-
-    // --- Lấy ID tiêu chí 2.1 (nếu có) ---
-    let criterion21Id = null;
-    try {
-        const c21Res = await client.query("SELECT id FROM drl.criterion WHERE term_code = $1 AND code = '2.1' LIMIT 1", [term_code]);
-        if (c21Res.rowCount) criterion21Id = c21Res.rows[0].id;
-    } catch (e) { console.warn("Could not find criterion 2.1:", e.message); }
-    // --- Hết lấy ID tiêu chí 2.1 ---
-
-    // --- Lặp qua các mục gửi lên và INSERT/UPDATE ---
-    for (const it of items) {
-      const criterion_id = toNum(it.criterion_id);
-      // Bỏ qua nếu không có criterion_id hợp lệ
-      if (!criterion_id) {
-          console.warn('Skipping item with invalid criterion_id:', it);
-          continue;
-      }
 
       // Xác định mệnh đề WHERE cho UPDATE dựa trên tiêu chí 2.1
       const whereClause = (criterion_id === criterion21Id)
@@ -147,10 +109,9 @@ export const saveSelfAssessment = async (req, res, next) => {
     await client.query('COMMIT'); // Lưu tất cả thay đổi
     res.json({ ok: true, total: total }); // Trả về thành công và tổng điểm mới
 
-  } catch (err) {
+  } catch (error) {
     await client.query('ROLLBACK'); // Hoàn tác nếu có lỗi
-    console.error('Save Self Assessment Error:', err); // Log lỗi chi tiết
-    next(err); // Chuyển lỗi cho middleware xử lý lỗi chung
+    console.error('Save Self Assessment Error:', error); 
   } finally {
     client.release(); // Luôn trả kết nối về pool
   }

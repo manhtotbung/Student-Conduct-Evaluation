@@ -1,6 +1,6 @@
 import pool from '../db.js';
 
-//Lấy danh sách tiêu chí
+//Lấy danh sách tiêu chí DRL
 export const getCriteria = async (term) =>{
     const query = `select c.id, c.term_code, c.code, c.title, c.type,c.max_points,
       coalesce((
@@ -27,10 +27,26 @@ export const getCriteria = async (term) =>{
     return rows;
 };
 
-//Lấy danh sách tự đánh giá của sinh viên
+//Lấy danh sách tự đánh giá DRL của sinh viên
 export const getSelfAssessment_student = async (student_code,term) =>{
   const query = `select sa.criterion_id, sa.option_id, sa.text_value, sa.self_score,sa.is_hsv_verified, sa.hsv_note
     from drl.self_assessment sa join ref.student s 
     on s.id = sa.student_id
     where s.student_code = $1 and sa.term_code = $2
     order by sa.criterion_id;
+  `
+  const { rows } = await pool.query(query, [student_code, term]);
+  return rows;
+};
+
+//Lưu thông tin đánh giá DRL sinh viên
+export const postSelfAssessment = async () =>{
+  const studentID = await pool.query("select id from ref.student where student_code = $1",[student_code])
+
+  if (studentRes.rowCount === 0) {
+    throw new Error("student_not_found");
+  }
+
+  const student_id = studentRes.rows[0].id;
+
+};
