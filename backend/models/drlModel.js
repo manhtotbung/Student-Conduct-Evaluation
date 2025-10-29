@@ -27,36 +27,10 @@ export const getCriteria = async (term) =>{
     return rows;
 };
 
-//Lấy id theo mã sinh viên
-export const getStudentID = async (student_code) => {
-  const code = (student_code ?? '').trim();
-  const query = `
-    SELECT id
-    FROM ref.student
-    WHERE lower(student_code) = lower($1)
-    LIMIT 1
-  `;
-  //$! = [code]
-/* rows trả về
-{
-  command: 'SELECT',
-  rowCount: 1,
-  oid: null,
-  rows: [ { id: 1, name: 'Nguyen Van A', age: 20 } ],
-  fields: [ ... ]
-}
-*/
-  const { rows } = await pool.query(query, [code]);
-  return rows[0] || null; // { id } hoặc null
-};
-
 //Lấy danh sách tự đánh giá của sinh viên
-export const getSelfAssessment_student = async (student_id,term) =>{
+export const getSelfAssessment_student = async (student_code,term) =>{
   const query = `select sa.criterion_id, sa.option_id, sa.text_value, sa.self_score,sa.is_hsv_verified, sa.hsv_note
-    from drl.self_assessment sa
-    where sa.student_id = $1 and sa.term_code = $2
+    from drl.self_assessment sa join ref.student s 
+    on s.id = sa.student_id
+    where s.student_code = $1 and sa.term_code = $2
     order by sa.criterion_id;
-  `;
-  const { rows } = await pool.query(query,[student_id, term]);
-  return rows || null; 
-};

@@ -1,6 +1,7 @@
 import pool from '../db.js';
 import { toNum} from '../utils/helpers.js';
-import { getCriteria, getSelfAssessment_student, getStudentID } from '../models/drlModel.js';
+import { getCriteria } from '../models/drlModel.js';
+import { getSelfAssessment_student } from '../models/drlModel.js';
 
 export const getCriteriaController = async (req, res) => {
   const { term } = req.query;
@@ -16,30 +17,19 @@ export const getCriteriaController = async (req, res) => {
 };
 
 export const getSelfAssessment = async (req, res) => {
-  //lấy từ url vd: GET /api/drl/self?student_code=SV001&term=2024-1 thì query  lấy thành object {student_code,....}
-  //term: mã học kỳ  
-  const { student_code, term } = req.query || {}; 
-    if (!student_code || !term) 
-  return res.status(400).json({ error: 'Không tìm thấy MSV hoặc học kì' });
+    const { student_code, term } = req.query || {};
+    if (!student_code || !term) return res.status(400).json({ error: 'Không tìm thấy MSV hoặc học kì!' });
 
     try {
-        // Lấy student_id từ student_code
-        const studentRes = await getStudentID(student_code);
-        if (!studentRes) {
-            return res.status(404).json({ error: 'không tìm thấy học sinh' });
-        }
-        const student_id = studentRes.id;
-
         // Lấy dữ liệu tự đánh giá
-        const selfStudentAcess = await getSelfAssessment_student(student_id, term);
-        if(!selfStudentAcess)
-        {
-         return res.status(404).json({ error: 'không tìm thấy HS tự đánh giá' }); 
+        const rows = await getSelfAssessment_student(student_code,term);
+        if (rows == []) {
+            return res.status(404).json({ error: 'Không tìm thấy MSV hoặc học kì' });
         }
-         res.json(selfStudentAcess);
-    } catch (err) {
-        console.error(' lỗi ở GetSelfAssessment: drlController', err);
-        
+        res.json(rows);
+    } catch (error) {
+        console.error('Lỗi ở getSelfAssessment!', error);
+        res.status(500).send({message: "Lỗi hệ thống"});
     }
 };
 
