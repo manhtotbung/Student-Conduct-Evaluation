@@ -1,0 +1,37 @@
+:root {
+  --main: #2e7d32;
+  --main-dark: #1b5e20;
+  --soft: #f5f6f8;
+}
+
+body {
+  background: var(--soft);
+}
+
+.btn-main {
+  background: var(--main);
+  border-color: var(--main);
+  color: #fff;
+}
+
+.btn-main:hover {
+  background: var(--main-dark);
+  border-color: var(--main-dark);
+}
+
+html, body {
+  overflow-y: auto; /* Luôn cho phép cuộn dọc nếu cần */
+  height: auto;     /* Bỏ giới hạn chiều cao cố định */
+  min-height: 100%; /* Đảm bảo ít nhất bằng chiều cao màn hình */
+}
+
+#root {
+  min-height: 100vh; /* Đảm bảo #root chiếm ít nhất toàn bộ chiều cao màn hình */
+  display: flex;      /* Sử dụng flexbox để bố cục tốt hơn (tùy chọn) */
+  flex-direction: column; /* Sắp xếp con theo chiều dọc (tùy chọn) */
+}
+
+/* Đảm bảo khu vực nội dung chính có thể giãn nở */
+main {
+   flex-grow: 1; /* Cho phép main chiếm không gian còn lại (nếu dùng flexbox trên #root) */
+}

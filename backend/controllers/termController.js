@@ -1,0 +1,34 @@
+const pool = require('../db');
+
+// Lấy danh sách học kỳ (dành cho dropdown chung)
+exports.getAllTerms = async (req, res, next) => {
+  try {
+    // Sắp xếp kỳ mới nhất lên đầu
+    const { rows } = await pool.query(
+      `SELECT code, title, year, semester, is_active, is_assessment_open
+       FROM ref.term
+       ORDER BY year DESC, semester DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('Get All Terms Error:', err);
+    next(err); // Chuyển lỗi cho error handler
+  }
+};
+
+// Lấy trạng thái Mở/Khóa đánh giá của một kỳ (dùng cho SelfAssessmentPage)
+exports.getTermStatus = async (req, res, next) => {
+  const { termCode } = req.params;
+  try {
+    const result = await pool.query('SELECT is_assessment_open FROM ref.term WHERE code = $1', [termCode]);
+    // Trả về false nếu không tìm thấy term thay vì 404
+    if (result.rowCount === 0) {
+      return res.json({ isAssessmentOpen: false });
+    }
+    res.json({ isAssessmentOpen: result.rows[0].is_assessment_open });
+  } catch (err) {
+    console.error("Get Term Status Error:", err);
+    // Trả về false nếu có lỗi DB thay vì 500 (an toàn cho frontend)
+    res.json({ isAssessmentOpen: false });
+  }
+};
