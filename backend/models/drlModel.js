@@ -40,13 +40,70 @@ export const getSelfAssessment_student = async (student_code,term) =>{
 };
 
 //Lưu thông tin đánh giá DRL sinh viên
-export const postSelfAssessment = async () =>{
+export const postSelfAssessment = async (student_code, term_code, items) =>{
   const studentID = await pool.query("select id from ref.student where student_code = $1",[student_code])
 
-  if (studentRes.rowCount === 0) {
-    throw new Error("student_not_found");
+  if (studentID.rowCount === 0) {
+    throw new Error("Student_404");
   }
 
-  const student_id = studentRes.rows[0].id;
+  const student_id = studentID.rows[0].id;
+
+  // Lấy criterion_id của tiêu chí text
+  const criteriaText = await pool.query(
+    `select id from drl.criterion where code = '2.1' and term_code = $1 limit 1`,
+    [term_code]
+  );
+
+  const criterionID = criteriaText.rows[0]?.id;
+  
+  for (const it of items) {
+    const is21 = (it.criterion_id == criterionID);
+
+    if (is21) {
+      if ((it.score > 0) && (!it.text_value || it.text_value.trim() === "")) {
+        throw new Error("Điểm 2.1 > 0 thì phải ghi nội dung tham gia CLB hoặc hoạt động!");
+      }
+
+      if ((!it.text_value || it.text_value.trim() === "") && (!it.score || it.score == 0)) {
+        // Không tham gia -> text null, score = 0
+        it.text_value = null;
+        it.score = 0;
+      }
+    }
+    //lưu các đánh giá vào self_assessment và các bảng liên quan
+    await pool.query(
+      `insert into drl.self_assessment (student_id, term_code, criterion_id, option_id, text_value, self_score, updated_at)
+      values ($1, $2, $3, $4, $5, $6, now())
+      on conflict (student_id, term_code, criterion_id)
+      do update set 
+        option_id = excluded.option_id,
+        text_value = excluded.text_value,
+        self_score = excluded.self_score,
+        updated_at = now(); `,
+      
+        [
+        student_id,
+        term_code,
+        it.criterion_id,
+        it.option_id || null,
+        it.text_value || null,
+        it.score || 0,
+      ]
+    );
+  }
+
+  //Tính tổng và lưu điểm 
+  const sumPoint = items.reduce((sum, x) => sum + (x.score || 0), 0);
+
+  await pool.query(
+    `insert into drl.term_score (student_id, term_code, total_score, updated_at)
+      values ($1, $2, $3, now())
+      on conflict (student_id, term_code)
+      do update set total_score = $3, updated_at = now();`,
+    [student_id, term_code, sumPoint]
+  );
+
+  return { message: "Lưu thành công đánh giá", student_id, sumPoint };
 
 };

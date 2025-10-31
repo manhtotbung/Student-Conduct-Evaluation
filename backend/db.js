@@ -4,7 +4,7 @@ require('dotenv').config(); // Đảm bảo đọc được biến môi trườn
 const pool = new Pool({
   connectionString:
     process.env.DATABASE_URL ||
-    'postgres://postgres:12345678@localhost:5432/danh_gia_diem_ren_luyen',
+    'postgres://postgres:123456@localhost:5432/postgres',
   ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false,
   idleTimeoutMillis: 30000,
 });
