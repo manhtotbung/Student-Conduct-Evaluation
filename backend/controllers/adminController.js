@@ -1069,4 +1069,19 @@ export const copyCriteriaFromTerm = async (req, res, next) => {
     }
 };
 
+export const searchClass = async (req, res) => {
+    const { classCode } = req.query;
+    if (!classCode || classCode.trim().length === 0) {
+        return res.status(400).json({ error: 'missing_search_query' });
+    }
+    try {
+        const search = await getSearchClassStudents(classCode.trim());
+        res.json(search);
+    } catch (err) {
+        res.status(500).json({ error: 'internal_server_error', detail: err.message });
+    }
+}
+
+
+
 // --- HẾT THAY THẾ ---
