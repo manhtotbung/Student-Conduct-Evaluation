@@ -34,4 +34,7 @@ router.put('/terms/:termCode/status', adminController.setTermAssessmentStatus);
 // POST /api/admin/criteria/copy
 router.post('/criteria/copy', adminController.copyCriteriaFromTerm);
 
+// Class Search
+router.get('/students/search', adminController.searchClass); 
+
 module.exports = router;

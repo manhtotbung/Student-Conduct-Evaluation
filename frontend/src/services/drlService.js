@@ -73,8 +73,8 @@ export const getClassStudents = (class_code, term) => {
 };
 
 // Admin Search Student API (Assumed endpoint)
-export const searchAdminStudents = (term, queryParams) => {
-  const params = new URLSearchParams({ term });
+export const searchAdminStudents = (queryParams) => {
+  const params = new URLSearchParams();
   if (queryParams.studentCode) params.append('studentCode', queryParams.studentCode);
   if (queryParams.name) params.append('name', queryParams.name);
   if (queryParams.classCode) params.append('classCode', queryParams.classCode);
