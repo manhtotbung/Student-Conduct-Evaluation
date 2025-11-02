@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId, getConfig } = require('../utils/helpers');
+const {getSearchClassStudents} = require('../models/adminModel.js');
 // Giả sử termController.js nằm cùng cấp hoặc bạn cần sửa đường dẫn
 // const { getTerms } = require('./termController'); // Tạm comment nếu chưa dùng hoặc gây lỗi
 
@@ -1068,5 +1069,20 @@ exports.copyCriteriaFromTerm = async (req, res, next) => {
         client.release(); // Trả kết nối về pool
     }
 };
+
+exports.searchClass = async (req, res) => {
+    const { classCode } = req.query;
+    if (!classCode || classCode.trim().length === 0) {
+        return res.status(400).json({ error: 'missing_search_query' });
+    }
+    try {
+        const search = await getSearchClassStudents(classCode.trim());
+        res.json(search);
+    } catch (err) {
+        res.status(500).json({ error: 'internal_server_error', detail: err.message });
+    }
+}
+
+
 
 // --- HẾT THAY THẾ ---

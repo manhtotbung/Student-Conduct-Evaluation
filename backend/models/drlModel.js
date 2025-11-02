@@ -96,12 +96,12 @@ export const postSelfAssessment = async (student_code, term_code, items) =>{
 
   //Tính tổng và lưu điểm 
   const sumPoint = items.reduce((sum, x) => sum + (x.score || 0), 0);
-
+  
   await pool.query(
-    `insert into drl.term_score (student_id, term_code, total_score, updated_at)
-      values ($1, $2, $3, now())
+    `insert into drl.term_score (student_id, term_code, total_score, updated_at, rank)
+      values ($1, $2, $3, now(), drl.rank_by_score($3))
       on conflict (student_id, term_code)
-      do update set total_score = $3, updated_at = now();`,
+      do update set total_score = $3, updated_at = now(),rank=EXCLUDED.rank;`,
     [student_id, term_code, sumPoint]
   );
 

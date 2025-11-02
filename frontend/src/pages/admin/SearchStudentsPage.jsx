@@ -35,7 +35,7 @@ const SearchStudentsPage = () => {
     setSelectedStudent(null); // Đóng modal (nếu đang mở)
     try {
       // Gọi API tìm kiếm
-      const data = await searchAdminStudents(term, searchParams);
+      const data = await searchAdminStudents(searchParams);
       setResults(data || []); // Lưu kết quả, đảm bảo là array
     } catch (e) {
       setError('Lỗi khi tìm kiếm: ' + e.message); // Báo lỗi
@@ -128,7 +128,6 @@ const SearchStudentsPage = () => {
                     <th>MSSV</th>
                     <th>Họ tên</th>
                     <th>Lớp</th>
-                    <th className="text-end">Điểm RL</th>
                     <th className="text-end">Thao tác</th>
                   </tr>
                 </thead>
@@ -137,8 +136,7 @@ const SearchStudentsPage = () => {
                     <tr key={s.student_code}>
                       <td>{s.student_code}</td>
                       <td>{s.full_name}</td>
-                      <td>{s.class_code}</td>
-                      <td className="text-end">{s.total_score ?? 0}</td>
+                      <td>{s.code}</td>
                       <td className="text-end">
                         {/* Nút mở modal xem/sửa điểm */}
                         <button
