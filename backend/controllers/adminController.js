@@ -1,5 +1,5 @@
-const pool = require('../db');
-const { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId, getConfig } = require('../utils/helpers');
+import pool from '../db.js';
+import { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId, getConfig } from '../utils/helpers.js';
 // Giả sử termController.js nằm cùng cấp hoặc bạn cần sửa đường dẫn
 // const { getTerms } = require('./termController'); // Tạm comment nếu chưa dùng hoặc gây lỗi
 
@@ -8,7 +8,7 @@ const { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId, getConfi
 
 // --- Controllers ---
 
-exports.getFaculties = async (req, res, next) => {
+export const getFaculties = async (req, res, next) => {
   const { term } = req.query || {};
   if (!term) return res.status(400).json({ error: 'missing_term' });
 
@@ -33,7 +33,7 @@ exports.getFaculties = async (req, res, next) => {
   }
 };
 
-exports.getClasses = async (req, res, next) => {
+export const getClasses = async (req, res, next) => {
   const { term, faculty } = req.query || {};
   if (!term) return res.status(400).json({ error: 'missing_term' });
 
@@ -71,7 +71,7 @@ exports.getClasses = async (req, res, next) => {
   }
 };
 
- exports.getClassStudents = async (req, res, next) => {
+ export const getClassStudents = async (req, res, next) => {
    const { class_code, term } = req.query || {};
    if (!class_code || !term) return res.status(400).json({ error: 'missing_params' });
 
@@ -97,7 +97,7 @@ exports.getClasses = async (req, res, next) => {
  };
 
 // --- Group Controllers (CRUD Groups) ---
-exports.getGroups = async (req, res, next) => {
+export const getGroups = async (req, res, next) => {
     const { term } = req.query || {};
     if (!term) return res.status(400).json({ error: 'missing_term' });
 
@@ -161,7 +161,7 @@ exports.getGroups = async (req, res, next) => {
 };
 
 // Tạo Group mới
-exports.createGroup = async (req, res, next) => {
+export const createGroup = async (req, res, next) => {
     // Cần term_code, code, title từ body
     const { term_code, code, title, display_order } = req.body;
     if (!term_code || !code || !title) {
@@ -186,7 +186,7 @@ exports.createGroup = async (req, res, next) => {
 };
 
 // Cập nhật Group
-exports.updateGroup = async (req, res, next) => {
+export const updateGroup = async (req, res, next) => {
     const { id } = req.params;
     const { code, title, display_order } = req.body; // Chỉ cho phép sửa 3 trường này
     if (!code || !title) {
@@ -215,7 +215,7 @@ exports.updateGroup = async (req, res, next) => {
 };
 
 // Xóa Group
-exports.deleteGroup = async (req, res, next) => {
+export const deleteGroup = async (req, res, next) => {
     const { id } = req.params;
     const { GROUP_TBL } = getConfig();
 
@@ -242,7 +242,7 @@ exports.deleteGroup = async (req, res, next) => {
 // --- Criteria Controllers (CRUD Criteria & Options) ---
 
 // Tạo mới (hoặc Upsert - tùy logic bạn muốn)
-exports.createOrUpdateCriterion = async (req, res, next) => {
+export const createOrUpdateCriterion = async (req, res, next) => {
     const { term_code, code, title, type, max_points, display_order, group_id, group_no } = req.body || {};
     if (!term_code || !code || !title) {
         return res.status(400).json({ error: 'missing_body_fields' });
@@ -368,7 +368,7 @@ exports.createOrUpdateCriterion = async (req, res, next) => {
 };
 
 // Update theo ID
-exports.updateCriterion = async (req, res, next) => {
+export const updateCriterion = async (req, res, next) => {
     const { id } = req.params;
     // Lấy term_code hiện tại của criterion để tạo group nếu cần
     let existingTermCode = null;
@@ -482,7 +482,7 @@ exports.updateCriterion = async (req, res, next) => {
 };
 
 
-exports.deleteCriterion = async (req, res, next) => {
+export const deleteCriterion = async (req, res, next) => {
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: 'missing_id' });
 
@@ -520,7 +520,7 @@ exports.deleteCriterion = async (req, res, next) => {
     }
 };
 
-exports.updateCriterionOptions = async (req, res, next) => {
+export const updateCriterionOptions = async (req, res, next) => {
     const { id } = req.params;
     const { options } = req.body || {};
     if (!id || !Array.isArray(options)) {
@@ -599,7 +599,7 @@ exports.updateCriterionOptions = async (req, res, next) => {
 };
 
 // Lấy danh sách học kỳ KÈM trạng thái mở/khóa đánh giá
-exports.getTermsWithStatus = async (req, res, next) => {
+export const getTermsWithStatus = async (req, res, next) => {
   // Có thể không cần filter theo term query param ở đây
   try {
     const { rows } = await pool.query(
@@ -615,7 +615,7 @@ exports.getTermsWithStatus = async (req, res, next) => {
 };
 
 // Cập nhật trạng thái mở/khóa đánh giá cho một học kỳ
-exports.setTermAssessmentStatus = async (req, res, next) => {
+export const setTermAssessmentStatus = async (req, res, next) => {
   const { termCode } = req.params;
   const { isOpen } = req.body; // Frontend sẽ gửi { isOpen: true } hoặc { isOpen: false }
 
@@ -645,7 +645,7 @@ exports.setTermAssessmentStatus = async (req, res, next) => {
   }
 };
 
-exports.getAdminTerms = async (req, res, next) => {
+export const getAdminTerms = async (req, res, next) => {
     // Thêm is_assessment_open vào SELECT
     try {
         const { sortBy } = req.query; // Ví dụ: sortBy=year_desc,semester_desc
@@ -664,7 +664,7 @@ exports.getAdminTerms = async (req, res, next) => {
     }
 };
 
-exports.createAdminTerm = async (req, res, next) => {
+export const createAdminTerm = async (req, res, next) => {
   const { code, title, year, semester, start_date, end_date, is_active } = req.body;
 
   // --- Validation cơ bản ---
@@ -703,7 +703,7 @@ exports.createAdminTerm = async (req, res, next) => {
   }
 };
 
-exports.updateAdminTerm = async (req, res, next) => {
+export const updateAdminTerm = async (req, res, next) => {
   const { termCode } = req.params; // Lấy mã kỳ từ URL
   // Lấy dữ liệu cần cập nhật từ body, không cho phép cập nhật 'code'
   const { title, year, semester, start_date, end_date, is_active, is_assessment_open } = req.body;
@@ -757,7 +757,7 @@ exports.updateAdminTerm = async (req, res, next) => {
 
 // --- THÊM HÀM NÀY VÀO backend/controllers/adminController.js ---
 
-exports.deleteAdminTerm = async (req, res, next) => {
+export const deleteAdminTerm = async (req, res, next) => {
   const { termCode } = req.params; // Lấy mã kỳ từ URL
 
   try {
@@ -804,7 +804,7 @@ exports.deleteAdminTerm = async (req, res, next) => {
 };
 
 // --- THÊM HÀM MỚI ĐỂ SAO CHÉP TIÊU CHÍ ---
-exports.copyCriteriaFromTerm = async (req, res, next) => {
+export const copyCriteriaFromTerm = async (req, res, next) => {
     const { sourceTermCode, targetTermCode } = req.body;
     // Kiểm tra đầu vào cơ bản
     if (!sourceTermCode || !targetTermCode) {

@@ -1,5 +1,9 @@
-const { Pool } = require('pg');
-require('dotenv').config(); // Đảm bảo đọc được biến môi trường
+import pg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const { Pool } = pg;
 
 const pool = new Pool({
   connectionString:
@@ -18,4 +22,4 @@ pool.query('SELECT NOW()', (err, res) => {
   }
 });
 
-module.exports = pool; // Export pool để dùng ở nơi khác
+export default pool;

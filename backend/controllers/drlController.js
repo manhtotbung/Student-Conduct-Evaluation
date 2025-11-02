@@ -1,5 +1,3 @@
-import pool from '../db.js';
-import { toNum} from '../utils/helpers.js';
 import { getCriteria, getHistoryAss, postSelfAssessment } from '../models/drlModel.js';
 import { getSelfAssessment_student } from '../models/drlModel.js';
 

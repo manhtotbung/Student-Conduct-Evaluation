@@ -33,7 +33,7 @@ export const getStudents = async (req, res, next) => {
     const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
-    console.error('Teacher Get Students Error:', err);
-    next(err);
+    console.error('Lỗi ở getStudent', err);
+    res.status(500).send({message: "Lỗi hệ thống"});
   }
 };

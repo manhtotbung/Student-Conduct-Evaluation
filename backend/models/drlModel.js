@@ -51,10 +51,7 @@ export const postSelfAssessment = async (student_code, term_code, items) =>{
   const student_id = studentID.rows[0].id;
 
   // Lấy criterion_id của tiêu chí text
-  const criteriaText = await pool.query(
-    `select id from drl.criterion where code = '2.1' and term_code = $1 limit 1`,
-    [term_code]
-  );
+  const criteriaText = await pool.query(`select id from drl.criterion where code = '2.1' and term_code = $1 limit 1`,[term_code]);
 
   const criterionID = criteriaText.rows[0]?.id;
   

@@ -1,4 +1,4 @@
-const pool = require('../db');
+import pool from '../db.js';
 
 // Helper kiểm tra quyền Khoa
 const checkFacultyAccess = async (username) => {
@@ -13,7 +13,7 @@ const checkFacultyAccess = async (username) => {
     return u.rows[0].faculty_code;
 };
 
-exports.getClasses = async (req, res, next) => {
+export const getClasses = async (req, res, next) => {
   const { username, term } = req.query || {};
   if (!username || !term) return res.status(400).json({ error: 'missing_params' });
 
@@ -48,7 +48,7 @@ exports.getClasses = async (req, res, next) => {
 };
 
 // Controller để Khoa xem SV (tương tự admin nhưng có kiểm tra quyền)
-exports.getClassStudents = async (req, res, next) => {
+export const getClassStudents = async (req, res, next) => {
     const { class_code, term, username } = req.query; // Thêm username để check quyền
     if (!class_code || !term || !username) {
         return res.status(400).json({ error: 'missing_params_faculty_students' });

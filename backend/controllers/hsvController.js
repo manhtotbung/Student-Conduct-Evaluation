@@ -1,5 +1,5 @@
-const pool = require('../db');
-const { toNum } = require('../utils/helpers');
+import pool from '../db.js';
+import  {toNum}  from '../utils/helpers.js';
 
 // Helper kiểm tra quyền HSV/Đoàn Khoa
 const checkHSVAccess = async (username) => {
@@ -14,7 +14,7 @@ const checkHSVAccess = async (username) => {
     return { allowed: true, faculty_code: u.rows[0].faculty_code || null };
 };
 
-exports.getClasses = async (req, res, next) => {
+export const getClasses = async (req, res, next) => {
   const { username, term } = req.query || {};
   if (!username || !term) return res.status(400).json({ error: 'missing_params' });
 
@@ -59,7 +59,7 @@ exports.getClasses = async (req, res, next) => {
   }
 };
 
-exports.getClassStudents = async (req, res, next) => {
+export const getClassStudents = async (req, res, next) => {
   const { class_code, term, username } = req.query; // Thêm username để check quyền (tùy chọn)
   if (!class_code || !term) return res.status(400).json({ error: 'missing_params' });
 
@@ -103,7 +103,7 @@ exports.getClassStudents = async (req, res, next) => {
   }
 };
 
-exports.confirmAssessment = async (req, res, next) => {
+export const confirmAssessment = async (req, res, next) => {
   const { student_code, term_code, participated, note, username } = req.body || {};
   if (!student_code || !term_code || typeof participated !== 'boolean' || !username) {
     return res.status(400).json({ error: 'missing_body_or_username' });

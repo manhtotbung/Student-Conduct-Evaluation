@@ -1,7 +1,7 @@
-const pool = require('../db');
+import pool from '../db.js';
 
 // Lấy danh sách học kỳ (dành cho dropdown chung)
-exports.getAllTerms = async (req, res, next) => {
+export const getAllTerms = async (req, res, next) => {
   try {
     // Sắp xếp kỳ mới nhất lên đầu
     const { rows } = await pool.query(
@@ -17,7 +17,7 @@ exports.getAllTerms = async (req, res, next) => {
 };
 
 // Lấy trạng thái Mở/Khóa đánh giá của một kỳ (dùng cho SelfAssessmentPage)
-exports.getTermStatus = async (req, res, next) => {
+export const getTermStatus = async (req, res, next) => {
   const { termCode } = req.params;
   try {
     const result = await pool.query('SELECT is_assessment_open FROM ref.term WHERE code = $1', [termCode]);

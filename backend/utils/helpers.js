@@ -1,4 +1,4 @@
-const pool = require('../db.js'); // Import pool để dùng trong helper
+import pool from '../db.js';
 
 // Biến cục bộ để lưu kết quả probe (sẽ được set ở server.js)
 let config = {
@@ -10,22 +10,22 @@ let config = {
 };
 
 // Hàm để cập nhật config từ server.js
-const setDbConfig = (dbConfig) => {
+export const setDbConfig = (dbConfig) => {
   config = { ...config, ...dbConfig };
   console.log('[Helpers] DB Config updated:', config); // Log để kiểm tra
 };
 
 
-const toNum = (v) => (v == null ? null : Number(v));
+export const toNum = (v) => (v == null ? null : Number(v));
 
-const parseGroupId = (code) => {
+export const parseGroupId = (code) => {
   if (!code) return null;
   const g = String(code).split(".")[0].replace(/\D/g, "");
   return g ? Number(g) : null;
 };
 
 // Trả về group_id hợp lệ nếu có; nếu không có trả null
-const validateGroupIdMaybe = async (group_id) => {
+export const validateGroupIdMaybe = async (group_id) => {
   if (!config.HAS_GROUP_ID || group_id == null) return null; // Sử dụng config
   try {
     const r = await pool.query(`SELECT id FROM ${config.GROUP_TBL} WHERE id = $1`, [Number(group_id)]);
@@ -36,7 +36,7 @@ const validateGroupIdMaybe = async (group_id) => {
 };
 
 // Tìm (hoặc tự tạo) group_id fallback để thỏa mãn NOT NULL + FK
-const pickFallbackGroupId = async ({ term_code, code }) => {
+export const pickFallbackGroupId = async ({ term_code, code }) => {
   if (!config.HAS_GROUP_ID) return null; // Sử dụng config
 
   const want = parseGroupId(code);
@@ -94,13 +94,4 @@ const pickFallbackGroupId = async ({ term_code, code }) => {
   return null;
 };
 
-// Export các hàm và biến config
-module.exports = {
-  toNum,
-  parseGroupId,
-  validateGroupIdMaybe,
-  pickFallbackGroupId,
-  setDbConfig,
-  // Getter để các module khác có thể đọc config một cách an toàn
-  getConfig: () => config,
-};
+export const getConfig = () => config;

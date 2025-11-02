@@ -55,9 +55,10 @@ const ViewStudentsPage = () => {
         <table className="table table-striped align-middle">
           <thead>
             <tr>
-              <th>MSSV</th>
+              <th>MSV</th>
               <th>Họ tên</th>
-              <th>Lớp</th>
+              <th>Mã Lớp</th>
+              <th>Tên Lớp</th>
               <th className="text-end">Tổng điểm</th>
               <th></th>
             </tr>
@@ -68,6 +69,7 @@ const ViewStudentsPage = () => {
                 <td>{s.student_code}</td>
                 <td>{s.full_name}</td>
                 <td>{s.class_code}</td>
+                <td>{s.class_name}</td>
                 <td className="text-end">{s.total_score}</td>
                 <td className="text-end">
                   <button 

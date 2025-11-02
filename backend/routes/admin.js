@@ -1,5 +1,5 @@
-const express = require('express');
-const adminController = require('../controllers/adminController');
+import express from "express";
+import * as adminController from '../controllers/adminController.js';
 const router = express.Router();
 
 // Faculties & Classes
@@ -34,4 +34,4 @@ router.put('/terms/:termCode/status', adminController.setTermAssessmentStatus);
 // POST /api/admin/criteria/copy
 router.post('/criteria/copy', adminController.copyCriteriaFromTerm);
 
-module.exports = router;
+export default router;

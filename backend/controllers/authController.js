@@ -1,7 +1,7 @@
-const bcrypt = require('bcryptjs');
-const pool = require('../db');
+import bcrypt from 'bcryptjs';
+import pool from '../db.js';
 
-exports.login = async (req, res, next) => { // Thêm next để chuyển lỗi
+export const login = async (req, res, next) => { // Thêm next để chuyển lỗi
   const { username, password } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ error: 'missing_body' });
