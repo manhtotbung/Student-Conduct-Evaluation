@@ -98,13 +98,26 @@ export const postSelfAssessment = async (student_code, term_code, items) =>{
   const sumPoint = items.reduce((sum, x) => sum + (x.score || 0), 0);
 
   await pool.query(
-    `insert into drl.term_score (student_id, term_code, total_score, updated_at)
-      values ($1, $2, $3, now())
+    `insert into drl.term_score (student_id, term_code, total_score, updated_at, rank)
+      values ($1, $2, $3, now(), drl.rank_by_score($3))
       on conflict (student_id, term_code)
-      do update set total_score = $3, updated_at = now();`,
+      do update set total_score = $3, updated_at = now(),rank=EXCLUDED.rank;`,
     [student_id, term_code, sumPoint]
   );
 
   return { message: "Lưu thành công đánh giá", student_id, sumPoint };
+
+};
+
+//Lịch sử đánh giá
+export const getHistoryAss = async (student_code) => {
+  const query = `select ts.term_code,ts.total_score, ts.rank
+    from drl.term_score ts
+    inner join ref.student s on ts.student_id = s.id
+    inner join ref.term t on ts.term_code = t.code
+    where s.student_code = $1
+    order by t.year desc, t.semester desc`
+  const {rows} = await pool.query(query,[student_code]);
+  return rows;
 
 };

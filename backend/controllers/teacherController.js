@@ -1,6 +1,6 @@
-const pool = require('../db');
+import pool from '../db.js';
 
-exports.getStudents = async (req, res, next) => {
+export const getStudents = async (req, res, next) => {
   const { username, term, class_code } = req.query || {};
   if (!username || !term) return res.status(400).json({ error: 'missing_params' });
 

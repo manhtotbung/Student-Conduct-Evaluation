@@ -1,8 +1,9 @@
-const express = require('express');
-const teacherController = require('../controllers/teacherController');
+import express from "express";
+import {getStudents} from "../controllers/teacherController.js";
+
 const router = express.Router();
 
 // /api/teacher/students?username=...&term=...
-router.get('/students', teacherController.getStudents);
+router.get('/students',getStudents);
 
-module.exports = router;
+export default router;
