@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getClassStudents } from '../../services/drlService';
+import { getAdminClassStudents, getFacultyClassStudents } from '../../services/drlService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import StudentAssessmentModal from './StudentAssessmentModal';
+import useAuth from '../../hooks/useAuth';
+
 
 const ClassStudentList = ({ classCode, term, onListLoaded }) => {
+  const {user} = useAuth(); // lấy username + role_code
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,10 +17,25 @@ const ClassStudentList = ({ classCode, term, onListLoaded }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getClassStudents(classCode, term);
+      let res;
+      // Faculty api
+      if (user?.role === 'faculty') {
+        res = await getFacultyClassStudents(
+          user.username,
+          classCode,
+          term
+        );
+      } else if(user?.role === 'admin') {
+        // Admin api 
+        res = await getAdminClassStudents(classCode, term);
+      }
+
+      const data = res.data || res; // Tùy theo Axios hay fetch
+      
       setStudents(data);
       if (onListLoaded) onListLoaded(); // Callback cho component cha
     } catch (e) {
+      console.error('lỗi ko load được sinh viên:', e);
       setError(e.message);
     }
     setLoading(false);
@@ -44,7 +62,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded }) => {
         <table className="table table-striped align-middle">
           <thead>
             <tr>
-              <th>MSSV</th>
+              <th>MSV</th>
               <th>Họ tên</th>
               <th className="text-end">Tổng điểm</th>
               <th></th>
