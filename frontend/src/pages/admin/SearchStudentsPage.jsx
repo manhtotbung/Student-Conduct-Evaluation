@@ -144,7 +144,7 @@ const SearchStudentsPage = () => {
                           className="btn btn-sm btn-outline-primary"
                           onClick={() => setSelectedStudent({ code: s.student_code, name: s.full_name })}
                         >
-                          Xem/Sửa
+                          Xem
                         </button>
                       </td>
                     </tr>
