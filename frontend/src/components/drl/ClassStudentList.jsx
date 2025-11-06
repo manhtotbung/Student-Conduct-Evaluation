@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getAdminClassStudents, getFacultyClassStudents } from '../../services/drlService';
+import { getAdminClassStudents, getFacultyClassStudents, getTeacherStudents } from '../../services/drlService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import StudentAssessmentModal from './StudentAssessmentModal';
 import useAuth from '../../hooks/useAuth';
@@ -13,23 +13,30 @@ const ClassStudentList = ({ classCode, term, onListLoaded }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const fetchData = useCallback(async () => {
-    if (!classCode || !term) return;
     setLoading(true);
     setError(null);
+    
     try {
       let res;
-      // Faculty api
       if (user?.role === 'faculty') {
-        res = await getFacultyClassStudents(
-          user.username,
-          classCode,
-          term
-        );
-      } else if(user?.role === 'admin') {
+        // Faculty api
+        if(!classCode || !term || !user.username) return console.log("thiếu dữ liệu!");
+        else res = await getFacultyClassStudents(user.username, classCode, term);
+      } 
+
+      else if(user?.role === 'admin') {
         // Admin api 
-        res = await getAdminClassStudents(classCode, term);
+        if(!classCode || !term) return console.log("thiếu dữ liệu!");
+        else res = await getAdminClassStudents(classCode, term);
       }
 
+      else if(user?.role === 'teacher')
+      {
+         // teacher api
+          if(!term ) return console.log("thiếu dữ liệu!");
+          else res = await getTeacherStudents(user.username, term);
+      }
+      
       const data = res.data || res; 
       
       setStudents(data);
