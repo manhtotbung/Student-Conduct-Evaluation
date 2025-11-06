@@ -30,7 +30,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded }) => {
         res = await getAdminClassStudents(classCode, term);
       }
 
-      const data = res.data || res; // Tùy theo Axios hay fetch
+      const data = res.data || res; 
       
       setStudents(data);
       if (onListLoaded) onListLoaded(); // Callback cho component cha
@@ -39,7 +39,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded }) => {
       setError(e.message);
     }
     setLoading(false);
-  }, [classCode, term, onListLoaded]);
+  }, [classCode, term, user?.role, user?.username, onListLoaded]);
 
   useEffect(() => {
     fetchData();
