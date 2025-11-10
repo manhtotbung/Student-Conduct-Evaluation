@@ -1,34 +1,15 @@
-import {checkRole,getClass} from '../models/hsvModel.js'
+import {checkRole,getClass,getStudents} from '../models/hsvModel.js'
 import pool from '../db.js';
 
-// Helper kiểm tra quyền HSV/Đoàn Khoa
-const checkHSVAccess = async (req, res) => {
-  const {username} = req.query || {};
-    if(!username) return res.status(400).json({error:"Không có tên đăng nhập"});
-
-    try {
-      
-
-      res.json({
-        message:"Truy cập thành công!",
-        role: ckrole.faculty_code ? "Đoàn khoa" : "HSV",
-        faculty_code: ckrole.faculty_code,
-      });
-    } catch (error) {
-      console.error('Lỗi ở checkHSCAccess', error);
-      res.status(500).send({message:"Lỗi hệ thống"});
-    } 
-};
-
-export const getClasses = async (req, res) => {
+export const getListClass = async (req, res) => {
   const { username, term } = req.query || {};
   if (!username || !term) return res.status(400).json({ error: 'missing_params' });
 
   try {
     const ckrole = await checkRole(username);
-      if (!ckrole.allowed) {
-        return res.status(403).json({ error: 'Không có quyền truy cập'});
-      }
+    if (!ckrole.allowed) {
+      return res.status(403).json({ error: 'Không có quyền truy cập'});
+    }
     const rows = await getClass(term,ckrole.faculty_code);
     res.json(rows);
 
@@ -38,49 +19,25 @@ export const getClasses = async (req, res) => {
   }
 };
 
-export const getClassStudents = async (req, res, next) => {
-  const { class_code, term, username } = req.query; // Thêm username để check quyền (tùy chọn)
+export const getListStudents = async (req, res) => {
+  const { class_code, term} = req.query;
   if (!class_code || !term) return res.status(400).json({ error: 'missing_params' });
 
-   // OPTIONAL: Kiểm tra xem user HSV có quyền xem lớp này không (nếu là Đoàn Khoa)
-   // if (username) { ... logic kiểm tra quyền ... }
-
-
   try {
-    // Lấy ID và max_points của tiêu chí 2.1
-    const c21Res = await pool.query("SELECT id, max_points FROM drl.criterion WHERE term_code = $1 AND code = '2.1' LIMIT 1", [term]);
-    const criterion21Id = c21Res.rowCount ? c21Res.rows[0].id : null;
-    // Không tìm thấy tiêu chí 2.1 không phải là lỗi nghiêm trọng, vẫn trả về ds SV
-     if (!criterion21Id) {
-         console.warn(`Criterion '2.1' not found for term ${term}`);
-     }
+    //Cần lưu thộng tin của username
+    //const ckrole = await checkRole(username);
+    // if (!ckrole.allowed) {
+    //   return res.status(403).json({ error: 'Không có quyền truy cập111'});
+    // }
 
-
-    const { rows } = await pool.query(
-      `
-      SELECT
-        s.student_code, s.full_name,
-        -- Lấy điểm 2.1 từ self_assessment nếu criterion21Id tồn tại
-        COALESCE(sa.self_score, 0)::int AS score_21,
-        COALESCE(sa.is_hsv_verified, false) AS verified,
-        sa.hsv_note,
-        sa.text_value AS request_note
-      FROM ref.class c
-      JOIN ref.student s ON s.class_id = c.id
-      LEFT JOIN drl.self_assessment sa ON sa.student_id = s.id
-         AND sa.term_code = $2
-         AND sa.criterion_id = $3 -- Join với criterion_id tìm được
-      WHERE c.code = $1
-      ORDER BY s.student_code
-    `,
-      [class_code.trim(), term, criterion21Id] // Truyền criterion21Id vào query
-    );
+    const rows = await getStudents(class_code, term);
     res.json(rows);
-  } catch (err) {
-    console.error('HSV Get Class Students Error:', err);
-    next(err);
+  } catch (error) {
+    console.error('Lỗi ở getListStudents', error);
+    res.status(500).send({message:"Lỗi hệ thống"});
   }
 };
+
 
 export const postConfirmAssessment = async (req, res, next) => {
   const { student_code, term_code, participated, note, username } = req.body || {};

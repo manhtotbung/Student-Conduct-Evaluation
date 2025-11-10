@@ -38,7 +38,7 @@ const HSVStudentList = ({ classCode, term }) => {
       <Table striped responsive className="align-middle">
           <thead>
             <tr>
-              <th>MSSV</th>
+              <th>MSV</th>
               <th>Họ tên</th>
               <th className="text-center">Điểm 2.1</th>
               <th className="text-center">Tham gia</th>

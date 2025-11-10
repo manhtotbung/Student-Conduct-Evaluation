@@ -11,7 +11,7 @@ export const checkRole = async (username) => {
     return { allowed: true, faculty_code: role.rows[0].faculty_code || null };
 };    
 
-//:Lấy danh sách lớp 
+//Lấy danh sách lớp 
 export const getClass = async (term, faculty_code) => {
     let query = `SELECT f.code AS faculty_code, c.code AS class_code, c.name AS class_name, COUNT(s.id) AS total_students, COUNT(DISTINCT ts.student_id) AS completed
         FROM ref.class c
@@ -30,5 +30,20 @@ export const getClass = async (term, faculty_code) => {
         ORDER BY f.code, c.code`;
 
     const { rows } = await pool.query(query, params);
+    return rows;
+};
+
+//Lấy danh sách tiêu chí sinh viên có tham gia CLB,HSV,...
+export const getStudents = async (class_code, term) =>{
+    const query = `SELECT s.student_code, s.full_name,ctn.code AS criterion_code,self_score,
+      sa.text_value, sa.is_hsv_verified, sa.hsv_note
+    FROM ref.student s JOIN ref.class c ON s.class_id = c.id
+        LEFT JOIN drl.criterion ctn ON ctn.term_code = $2 AND ctn.require_hsv_verify = TRUE
+        LEFT JOIN drl.self_assessment sa ON sa.student_id = s.id AND sa.term_code = $2 AND sa.criterion_id = ctn.id
+    WHERE c.code = $1
+    ORDER BY c.code, s.student_code;`;
+
+    const { rows } = await pool.query(query, [class_code, term]);
+    console.log(rows);
     return rows;
 };
