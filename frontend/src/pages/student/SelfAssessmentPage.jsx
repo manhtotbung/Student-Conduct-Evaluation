@@ -44,7 +44,9 @@ const SelfAssessmentPage = () => {
     setIsAssessmentOpen(true);
     try {
       const dataHistory = await getStudentHistory(user.student_code);
-      checkWarningCondition(dataHistory[0].total_score);
+      if (dataHistory && dataHistory.length > 0) {
+        checkWarningCondition(dataHistory[0].total_score);
+      }
 
       const [critRes, selfRes, statusRes] = await Promise.all([
         getCriteria(term),

@@ -19,9 +19,6 @@ import ViewFacultiesPage from './pages/admin/ViewFacultiesPage';
 import ViewAllClassesPage from './pages/admin/ViewAllClassesPage';
 import SearchStudentsPage from './pages/admin/SearchStudentsPage';
 import AdminCriteriaPage from './pages/admin/AdminCriteriaPage';
-import ManageUsersPage from './pages/admin/ManageUsersPage';
-import ManageClassesPage from './pages/admin/ManageClassesPage';
-import ManageFacultiesPage from './pages/admin/ManageFacultiesPage';
 import ManageTermsPage from './pages/admin/ManageTermsPage';
 import ManageGroupsPage from './pages/admin/ManageGroupsPage';
 
@@ -85,9 +82,6 @@ function AppRoutes() {
         <Route path="admin/groups/manage" element={<ManageGroupsPage />} />
         <Route path="admin/terms" element={<ManageTermsPage />} />
         <Route path="admin/search" element={<SearchStudentsPage />} />
-        <Route path="admin/users" element={<ManageUsersPage />} />
-        <Route path="admin/classes/manage" element={<ManageClassesPage />} />
-        <Route path="admin/faculties/manage" element={<ManageFacultiesPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />
