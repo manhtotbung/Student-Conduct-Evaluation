@@ -14,9 +14,6 @@ const Navbar = () => {
           Hệ thống Đánh giá Điểm Rèn luyện
         </BsNavbar.Brand>
         {/* Dùng Navbar.Text thay cho span.navbar-text */}
-        <BsNavbar.Text className="d-none d-md-inline">
-          React Frontend
-        </BsNavbar.Text>
       </Container>
     </BsNavbar>
   );

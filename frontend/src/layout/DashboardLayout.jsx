@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useOutletContext } from 'react-router-dom';
-import { Container, Row, Col, Card, Form, Spinner } from 'react-bootstrap'; // Import components
+import { Container, Row, Col, Card, Form} from 'react-bootstrap'; // Import components
 import useAuth from '../hooks/useAuth';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
@@ -17,7 +17,7 @@ const DashboardLayout = () => {
     const fetchTerms = async () => {
       setLoadingTerms(true);
       try {
-        const termsData = await getTerms({ sortBy: 'year_desc,semester_desc' });
+        const termsData = await getTerms();
 
         setAvailableTerms(termsData || []);
 

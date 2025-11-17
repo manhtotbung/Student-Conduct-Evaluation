@@ -7,7 +7,8 @@ export const getAllTerms = async (req, res, next) => {
     const { rows } = await pool.query(
       `SELECT code, title, year, semester, is_active, is_assessment_open
        FROM ref.term
-       ORDER BY year DESC, semester DESC`
+       ORDER BY year DESC, semester DESC
+       Limit 2`
     );
     res.json(rows);
   } catch (err) {

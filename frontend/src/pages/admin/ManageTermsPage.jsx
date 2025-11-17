@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Table, Alert, Button, Badge, Spinner } from 'react-bootstrap'; // Import components
 import useNotify from '../../hooks/useNotify'; 
 import {
@@ -21,7 +21,7 @@ const ManageTermsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAdminTerms({ sortBy: 'year_desc,semester_desc' });
+      const data = await getAdminTerms();
       setTerms(data || []);
     } catch (e) {
       setError('Lỗi tải danh sách Học kỳ: ' + e.message);
