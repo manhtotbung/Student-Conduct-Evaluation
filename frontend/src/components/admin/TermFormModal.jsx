@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col, Spinner } from 'react-bootstrap'; // Import components
 
 const TermFormModal = ({ termToEdit, onSave, onClose }) => {
@@ -93,16 +93,15 @@ const TermFormModal = ({ termToEdit, onSave, onClose }) => {
             <Col md={6}>
               <Form.Group>
                   <Form.Label>Năm bắt đầu *</Form.Label>
-                  <Form.Control type="number" name="year" value={formData.year} onChange={handleChange} required disabled={isSaving} min="2000" max="2100"/>
+                  <Form.Control type="text" name="year" value={formData.year} onChange={handleChange} required disabled={true}/>
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group>
                   <Form.Label>Học kỳ *</Form.Label>
-                  <Form.Select name="semester" value={formData.semester} onChange={handleChange} required disabled={isSaving}>
+                  <Form.Select name="semester" value={formData.semester} onChange={handleChange} required disabled={!!termToEdit ||isSaving} >
                       <option value={1}>1</option>
                       <option value={2}>2</option>
-                      <option value={3}>Hè (3)</option>
                   </Form.Select>
               </Form.Group>
             </Col>

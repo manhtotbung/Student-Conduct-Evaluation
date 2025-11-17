@@ -253,12 +253,10 @@ export const deleteGroup = async (req, res, next) => {
       [id]
     );
     if (check.rowCount > 0) {
-      return res
-        .status(400)
-        .json({
-          error: "group_in_use_by_criteria",
-          message: "Không thể xóa nhóm đang được tiêu chí sử dụng.",
-        });
+      return res.status(400).json({
+        error: "group_in_use_by_criteria",
+        message: "Không thể xóa nhóm đang được tiêu chí sử dụng.",
+      });
     }
 
     const result = await pool.query(`DELETE FROM ${GROUP_TBL} WHERE id = $1`, [
@@ -375,12 +373,10 @@ export const createOrUpdateCriterion = async (req, res, next) => {
           // Quyết định trả lỗi hay tiếp tục mà không có group_id tùy thuộc vào GROUP_ID_NOT_NULL
           if (GROUP_ID_NOT_NULL) {
             // Trả về lỗi 500 mà bạn thấy
-            return res
-              .status(500)
-              .json({
-                error: "failed_auto_create_group",
-                detail: groupError.message,
-              });
+            return res.status(500).json({
+              error: "failed_auto_create_group",
+              detail: groupError.message,
+            });
           }
           // Nếu group_id nullable, có thể bỏ qua lỗi và để finalGroupId là null
         } finally {
@@ -435,12 +431,10 @@ export const createOrUpdateCriterion = async (req, res, next) => {
         .status(409)
         .json({ error: "duplicate_criterion_code", detail: err.detail });
     if (err.code === "23502")
-      return res
-        .status(400)
-        .json({
-          error: "missing_required_criterion_field",
-          detail: err.detail,
-        });
+      return res.status(400).json({
+        error: "missing_required_criterion_field",
+        detail: err.detail,
+      });
     next(err); // Chuyển lỗi khác
   }
 };
@@ -541,12 +535,10 @@ export const updateCriterion = async (req, res, next) => {
           await client.query("ROLLBACK");
           console.error("Error auto-creating group during update:", groupError); // LỖI GỐC SẼ HIỆN Ở ĐÂY
           if (GROUP_ID_NOT_NULL)
-            return res
-              .status(500)
-              .json({
-                error: "failed_auto_create_group",
-                detail: groupError.message,
-              });
+            return res.status(500).json({
+              error: "failed_auto_create_group",
+              detail: groupError.message,
+            });
         } finally {
           client.release();
         }
@@ -569,7 +561,7 @@ export const updateCriterion = async (req, res, next) => {
       toNum(display_order) ?? 999,
       require_hsv_verify,
     ];
-    
+
     let setClauses =
       "code=$1, title=$2, type=$3, max_points=$4, display_order=$5, require_hsv_verify=$6";
     // Chỉ cập nhật group_id nếu cột tồn tại
@@ -600,23 +592,19 @@ export const updateCriterion = async (req, res, next) => {
   } catch (err) {
     console.error("Admin Update Criterion Error:", err);
     if (err.code === "23503")
-      return res
-        .status(400)
-        .json({
-          error: "invalid_group_id_foreign_key_update",
-          detail: err.detail,
-        });
+      return res.status(400).json({
+        error: "invalid_group_id_foreign_key_update",
+        detail: err.detail,
+      });
     if (err.code === "23505")
       return res
         .status(409)
         .json({ error: "duplicate_criterion_code_update", detail: err.detail });
     if (err.code === "23502")
-      return res
-        .status(400)
-        .json({
-          error: "missing_required_criterion_field_update",
-          detail: err.detail,
-        });
+      return res.status(400).json({
+        error: "missing_required_criterion_field_update",
+        detail: err.detail,
+      });
     next(err);
   }
 };
@@ -810,14 +798,11 @@ export const setTermAssessmentStatus = async (req, res, next) => {
 export const getAdminTerms = async (req, res, next) => {
   // Thêm is_assessment_open vào SELECT
   try {
-    const { sortBy } = req.query; // Ví dụ: sortBy=year_desc,semester_desc
-    let orderByClause = "ORDER BY year DESC, semester DESC"; // Mặc định
-    // Cần xử lý sortBy an toàn hơn ở đây nếu bạn cho phép nhiều kiểu sort
-
     const { rows } = await pool.query(
       `SELECT code, title, year, semester, start_date, end_date, is_active, is_assessment_open
              FROM ref.term
-             ${orderByClause}`
+             ORDER BY year DESC, semester DESC
+             LIMIT 8`
     );
     res.json(rows);
   } catch (err) {
@@ -836,6 +821,17 @@ export const createAdminTerm = async (req, res, next) => {
   }
   if (![1, 2, 3].includes(semester)) {
     return res.status(400).json({ error: "invalid_semester_value" });
+  }
+  const checkSmesterInTerm = await pool.query(
+    `SELECT 1 FROM ref.term WHERE year = $1 AND semester = $2 LIMIT 1`,
+    [year, semester]
+  );
+  if (checkSmesterInTerm.rowCount > 0) {
+    return res
+      .status(409)
+      .json({
+        error: "Kỳ học này đã tồn tại",
+      });
   }
   // --- Hết Validation ---
 
@@ -969,10 +965,7 @@ export const deleteAdminTerm = async (req, res, next) => {
     if (err.code === "23503") {
       // Lỗi Foreign Key Violation
       return res.status(400).json({
-        error: "term_in_use",
-        message:
-          "Không thể xóa học kỳ vì đang được sử dụng bởi dữ liệu khác (ví dụ: điểm, tiêu chí).",
-        detail: err.detail,
+        error: "Không thể xóa học kỳ đã có dữ liệu đánh giá",
       });
     }
     next(err); // Chuyển lỗi khác cho error handler
@@ -1029,12 +1022,10 @@ export const copyCriteriaFromTerm = async (req, res, next) => {
     );
     if (checkExisting.rowCount > 0) {
       await client.query("ROLLBACK"); // Hoàn tác transaction
-      return res
-        .status(409)
-        .json({
-          error: "target_term_already_has_criteria",
-          message: `Kỳ ${targetTermCode} đã có tiêu chí. Không thể sao chép.`,
-        });
+      return res.status(409).json({
+        error: "target_term_already_has_criteria",
+        message: `Kỳ ${targetTermCode} đã có tiêu chí. Không thể sao chép.`,
+      });
     }
 
     // 2. Lấy tất cả tiêu chí, thông tin nhóm cũ, và các options từ kỳ nguồn
@@ -1065,12 +1056,10 @@ export const copyCriteriaFromTerm = async (req, res, next) => {
     // Kiểm tra nếu kỳ nguồn không có tiêu chí
     if (sourceCriteria.length === 0) {
       await client.query("ROLLBACK");
-      return res
-        .status(404)
-        .json({
-          error: "no_criteria_in_source_term",
-          message: `Kỳ ${sourceTermCode} không có tiêu chí nào để sao chép.`,
-        });
+      return res.status(404).json({
+        error: "no_criteria_in_source_term",
+        message: `Kỳ ${sourceTermCode} không có tiêu chí nào để sao chép.`,
+      });
     }
 
     const groupMap = new Map(); // Map lưu trữ: mã_nhóm_cũ -> id_nhóm_mới_ở_kỳ_đích

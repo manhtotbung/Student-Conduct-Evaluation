@@ -77,7 +77,7 @@ const CriterionRow = ({ c, saved, onChange, readOnly }) => {
 
 
 // Component Form chính
-const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = false }) => {
+const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = false, page }) => {
   const [formState, setFormState] = useState({});
 
   const selfMap = useMemo(() => {
@@ -131,7 +131,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
   return (
     <Form onSubmit={handleSubmit}>
       {/* Thay thế div.table-responsive bằng Table responsive */}
-      <div className="table-responsive" style={{ maxHeight: '65vh' }}>
+      <div className="table-responsive"  style={{ maxHeight:!!page?'60vh':'auto' }}>
         <Table bordered size="sm" className="align-middle mb-0">
           <thead>
             <tr className="text-center table-success text-white">

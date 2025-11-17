@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Alert, Button, Spinner, Modal } from 'react-bootstrap'; // Import components từ React-Bootstrap
+import { useState, useEffect, useCallback } from 'react';
+import { Container, Alert, Modal } from 'react-bootstrap'; // Import components từ React-Bootstrap
 import { useTerm } from '../../layout/DashboardLayout';
 import useAuth from '../../hooks/useAuth';
 import useNotify from '../../hooks/useNotify';
@@ -14,7 +14,6 @@ const SelfAssessmentPage = () => {
   const { notify } = useNotify();
 
   // State lưu trữ dữ liệu
-  const [history, setHistory] = useState([]);
   const [criteria, setCriteria] = useState([]);
   const [selfData, setSelfData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -132,6 +131,7 @@ const SelfAssessmentPage = () => {
         onSubmit={handleSubmit}
         isSaving={saving}
         readOnly={!isAssessmentOpen}
+        page="SelfAssessmentPage"
       />
     </Container>
   );

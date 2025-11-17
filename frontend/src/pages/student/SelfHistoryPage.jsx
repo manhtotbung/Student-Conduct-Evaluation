@@ -65,6 +65,7 @@ const SelfHistoryPage = () => {
         criteria={criteria}
         selfData={selfData}
         readOnly={true}
+        page="SelfHistoryPage"
       />
        <div className="mt-3 text-muted small text-end">
          <i className="bi bi-lock me-1"></i>Chế độ xem lại – **không thể chỉnh sửa**
