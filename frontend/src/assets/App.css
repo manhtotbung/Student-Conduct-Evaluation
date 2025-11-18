@@ -1,5 +1,5 @@
 .navbar {
-  background: var(--main);
+  background: var(--main)!important;
 }
 
 .navbar .navbar-brand,

@@ -68,38 +68,20 @@ export const MENUS = {
       key: "admin-criteria",
       path: "/admin/criteria",
       icon: "bi-sliders2",
-      text: "Quản trị tiêu chí",
+      text: "Quản lý tiêu chí",
     },
     {
       key: "manage-groups",
       path: "/admin/groups/manage",
       icon: "bi bi-tags-fill",
-      text: "Quản lý Nhóm TC",
-    },
-    {
-      key: "manage-users",
-      path: "/admin/users",
-      icon: "bi-people-fill",
-      text: "Quản lý Người dùng",
-    },
-    {
-      key: "manage-classes",
-      path: "/admin/classes/manage",
-      icon: "bi-collection-fill",
-      text: "Quản lý Lớp học",
-    },
-    {
-      key: "manage-faculties",
-      path: "/admin/faculties/manage",
-      icon: "bi-buildings-fill",
-      text: "Quản lý Khoa",
+      text: "Quản lý nhóm tiêu chí",
     },
     // --- DÒNG QUAN TRỌNG ĐÂY ---
     {
       key: "manage-terms",
       path: "/admin/terms",
       icon: "bi-calendar-event-fill",
-      text: "Quản lý Học kỳ",
+      text: "Quản lý học kỳ",
     },
     // --- HẾT ---
   ],

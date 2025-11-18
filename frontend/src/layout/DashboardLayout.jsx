@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useOutletContext } from 'react-router-dom';
-import { Container, Row, Col, Card, Form} from 'react-bootstrap'; // Import components
+import { Container, Row, Card, Form } from 'react-bootstrap'; // Import components
 import useAuth from '../hooks/useAuth';
-import Navbar from '../components/common/Navbar';
-import Sidebar from '../components/common/Sidebar';
+import Header from '../components/common/Header';
 import { roleVN } from '../utils/helpers';
 import { getTerms } from '../services/drlService';
 
@@ -43,7 +42,7 @@ const DashboardLayout = () => {
 
   return (
     <>
-      <Navbar />
+      <Header />
 
       {/* Dùng Container thay cho div.container-xxl */}
       <Container fluid="xxl" className="my-4">
@@ -79,19 +78,14 @@ const DashboardLayout = () => {
 
         {/* Dùng Row và Col thay cho div.row.g-3 và div.col-lg-X */}
         <Row className="g-3">
-          <Col lg={3}>
-            <Sidebar />
-          </Col>
-          <Col lg={9}>
-            {/* Dùng Card thay cho div.card.p-3 */}
-            <Card body className="shadow-sm">
-              {selectedTerm ? (
-                 <Outlet context={{ term: selectedTerm }} />
-              ) : (
-                 !loadingTerms && <div className="text-muted text-center p-3">Vui lòng chọn hoặc tạo học kỳ.</div>
-              )}
-            </Card>
-          </Col>
+          {/* Dùng Card thay cho div.card.p-3 */}
+          <Card body className="shadow-sm">
+            {selectedTerm ? (
+              <Outlet context={{ term: selectedTerm }} />
+            ) : (
+              !loadingTerms && <div className="text-muted text-center p-3">Vui lòng chọn hoặc tạo học kỳ.</div>
+            )}
+          </Card>
         </Row>
       </Container>
     </>
