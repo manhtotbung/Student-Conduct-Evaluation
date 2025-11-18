@@ -2,12 +2,10 @@ import pool from '../db.js';
 
 //Kiem tra role
 export const checkRole = async (username) => {
-    const query = `select faculty_code from auth.user_account where username = $1 and (role_code = 'union' or role_code = 'hsv') and is_active = true`;
+    const query = `select faculty_code from auth.user_account where username = $1 and role_code = 'hsv' and is_active = true`;
 
     const role = await pool.query(query,[username]);
     if (!role.rowCount) return { allowed: false };
-    // Nếu có faculty_code -> Đoàn Khoa, chỉ xem được khoa đó
-    // Nếu không có faculty_code -> HSV Trường, xem được hết
     return { allowed: true, faculty_code: role.rows[0].faculty_code || null };
 };    
 
