@@ -1,14 +1,5 @@
 import pool from '../db.js';
 
-//Kiem tra role
-export const checkRole = async (username) => {
-    const query = `select faculty_code from auth.user_account where username = $1 and role_code = 'hsv' and is_active = true`;
-
-    const role = await pool.query(query,[username]);
-    if (!role.rowCount) return { allowed: false };
-    return { allowed: true, faculty_code: role.rows[0].faculty_code || null };
-};    
-
 //Lấy danh sách lớp 
 export const getClass = async (term, faculty_code) => {
     let query = `SELECT f.code AS faculty_code, c.code AS class_code, c.name AS class_name, COUNT(s.id) AS total_students, COUNT(DISTINCT ts.student_id) AS completed
