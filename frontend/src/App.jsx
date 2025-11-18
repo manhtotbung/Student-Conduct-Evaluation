@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap'; // Import Spinner và Container
 import useAuth from './hooks/useAuth';
