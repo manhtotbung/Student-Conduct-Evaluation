@@ -9,8 +9,8 @@ export const getAllStudents = async (req, res) => {
   try {
     const rows = await getStudents(username, term, class_code );
     res.json(rows);
-  } catch (err) {
-    console.error('Lỗi ở getStudent', err);
+  } catch (error) {
+    console.error('Lỗi ở getStudent', error);
     res.status(500).send({message: "Lỗi hệ thống"});
   }
 };

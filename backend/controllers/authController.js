@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import pool from '../db.js';
 import jwt from 'jsonwebtoken';
 
-const ACCESS_TOKEN_TTL = '15m'; //thoi gian song cua access token
+const ACCESS_TOKEN_TTL = '500m'; //thoi gian song cua access token
 
 export const login = async (req, res, next) => { // Thêm next để chuyển lỗi
 

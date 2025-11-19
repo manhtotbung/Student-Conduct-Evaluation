@@ -6,7 +6,7 @@ let config = {
   GROUP_ID_NOT_NULL: false,
   OPT_SCORE_COL: 'score',
   OPT_ORDER_COL: 'display_order',
-  GROUP_TBL: 'drl.criterion_group' // Đã sửa: dùng tên bảng chuẩn
+  GROUP_TBL: 'drl.criteria_group'
 };
 
 // Hàm để cập nhật config từ server.js

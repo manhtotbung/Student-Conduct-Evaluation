@@ -1,8 +1,8 @@
 import pool from "../db.js";
 import { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId,getConfig,} from "../utils/helpers.js";
 import { getSearchClassStudents } from "../models/adminModel/adminModel.js";
-// Giả sử termController.js nằm cùng cấp hoặc bạn cần sửa đường dẫn
-// const { getTerms } = require('./termController'); // Tạm comment nếu chưa dùng hoặc gây lỗi
+import {getGroupCri} from "../models/adminModel/groupMModel.js";
+
 
 // --- Helpers cho Admin ---
 // (Có thể thêm middleware kiểm tra role Admin ở đây hoặc trong routes/admin.js)
@@ -105,77 +105,21 @@ export const getClassStudents = async (req, res, next) => {
 };
 
 // --- Group Controllers (CRUD Groups) ---
-export const getGroups = async (req, res, next) => {
+//Lấy danh sách nhóm tiêu chí
+export const getGroups = async (req, res) => {
   const { term } = req.query || {};
-  if (!term) return res.status(400).json({ error: "missing_term" });
-
-  const { GROUP_TBL } = getConfig();
+  if (!term) return res.status(400).json({ error: "Không tìm thấy năm học" });
 
   try {
-    // 1. Thử lấy các nhóm đã có trong CSDL
-    const dbGroupsRes = await pool.query(
-      `SELECT
-                id, term_code, code, title,
-                COALESCE(NULLIF(regexp_replace(code::text, '\\D','','g'),'')::int, NULLIF(regexp_replace(title::text, '\\D','','g'),'')::int, 0) AS group_no
-             FROM ${GROUP_TBL}
-             WHERE term_code = $1
-             ORDER BY group_no NULLS LAST, id`,
-      [term]
-    );
-
-    let groups = dbGroupsRes.rows;
-
-    // 2. Nếu KHÔNG có nhóm nào trong CSDL -> Tạo danh sách ảo 1-20
-    if (groups.length === 0) {
-      console.log(
-        `No groups found for term ${term}. Returning virtual groups (1-20).`
-      );
-      const virtualGroups = [];
-      for (let i = 1; i <= 20; i++) {
-        virtualGroups.push({
-          id: null, // Không có ID vì chưa lưu CSDL
-          group_no: i,
-          code: String(i), // Vẫn cần code để backend xử lý khi lưu tiêu chí
-          title: `Nhóm ${i}`,
-          // Không có term_code vì đây là ảo
-        });
-      }
-      groups = virtualGroups; // Sử dụng danh sách ảo
-    } else {
-      // Nếu có nhóm thực tế, xử lý group_no và sắp xếp như trước
-      let maxExistingNo = 0;
-      groups.forEach((g) => {
-        if (!g.group_no || g.group_no <= 0) {
-          g.group_no =
-            parseInt(String(g.code || g.title || "").replace(/\D/g, "")) || 0;
-        }
-        if (g.group_no > maxExistingNo) maxExistingNo = g.group_no;
-      });
-      groups.forEach((g) => {
-        if (g.group_no <= 0) {
-          maxExistingNo++;
-          g.group_no = maxExistingNo;
-        }
-      });
-      groups.sort((a, b) => a.group_no - b.group_no);
-    }
-
-    // Chỉ trả về các trường cần thiết cho frontend
-    const resultForFrontend = groups.map((g) => ({
-      id: g.id, // Sẽ là null cho nhóm ảo
-      group_no: g.group_no,
-      code: g.code, // Gửi code để backend biết cần tạo nhóm nào
-      title: g.title,
-    }));
-    res.json(resultForFrontend);
-  } catch (err) {
-    console.error("Admin Get Groups Error:", err);
-    next(err);
+    const rows = await getGroupCri(term);
+    res.json(rows);
+  } catch (error) {
+    console.error("Lỗi ở getGroups", error);
+    res.status(500).send({message: "Lỗi hệ thống"});
   }
-  // Không cần client.release() vì chỉ dùng pool.query
 };
 
-// Tạo Group mới
+// Tạo mới nhóm tiêu chí
 export const createGroup = async (req, res, next) => {
   // Cần term_code, code, title từ body
   const { term_code, code, title, display_order } = req.body;
