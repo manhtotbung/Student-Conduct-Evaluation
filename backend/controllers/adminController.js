@@ -3,7 +3,7 @@ import { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId,getConfi
 import { getSearchClassStudents } from "../models/adminModel/adminModel.js";
 
 import {getGroupCri, postGroupCri, putGroupCri,deleteGroupCri} from "../models/adminModel/groupMModel.js";
-import { getAdSemester,postAdSemester,putAdSemester,deletdeAdSemester } from "../models/adminModel/semesterMModel.js";
+import { getAdSemester,postAdSemester,putAdSemester,deletdeAdSemester, putAdSemesterStatus } from "../models/adminModel/semesterMModel.js";
 
 // --- Helpers cho Admin ---
 // (Có thể thêm middleware kiểm tra role Admin ở đây hoặc trong routes/admin.js)
@@ -707,31 +707,20 @@ export const updateCriterionOptions = async (req, res, next) => {
 // Cập nhật trạng thái mở/khóa đánh giá cho một học kỳ
 export const setTermAssessmentStatus = async (req, res, next) => {
   const { termCode } = req.params;
-  const { isOpen } = req.body; // Frontend sẽ gửi { isOpen: true } hoặc { isOpen: false }
+  const { isOpen } = req.body;
 
   if (typeof isOpen !== "boolean") {
-    return res.status(400).json({ error: "invalid_is_open_value" });
+    return res.status(400).json({ error: "Sai kiểu dữ liệu" });
   }
 
   try {
-    const result = await pool.query(
-      "UPDATE ref.term SET is_active = $1 WHERE code = $2 RETURNING code, is_active",
-      [isOpen, termCode]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "term_not_found" });
-    }
-
-    res.json({
-      ok: true,
-      termCode: result.rows[0].code,
-      isAssessmentOpen: result.rows[0].is_assessment_open,
+    const rows = await putAdSemesterStatus(isOpen,termCode);
+    res.json({ok: true,termCode: rows[0].code,isAssessmentOpen: rows[0].is_active,
       message: `Đã ${isOpen ? "mở" : "khóa"} đánh giá cho kỳ ${termCode}.`,
     });
-  } catch (err) {
-    console.error("Admin Set Term Assessment Status Error:", err);
-    next(err);
+  } catch (error) {
+    console.error("Lỗi ở setTermAssessmentStatus", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 
@@ -740,9 +729,9 @@ export const getAdminTerms = async (req, res) => {
   try {
     const rows = await getAdSemester();
     res.json(rows);
-  } catch (err) {
-    console.error("Admin Get Terms Error:", err);
-    next(err);
+  } catch (error) {
+    console.error("Lỗi ở getAdminTerms", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 
@@ -782,7 +771,7 @@ export const updateAdminTerm = async (req, res) => {
     return res.status(400).json({ error: "Thiếu dữ liệu" });
   }
   if (![1, 2, 3].includes(semester)) {
-        return res.status(400).json({ error: "Học kì không hợp lệ" });
+    return res.status(400).json({ error: "Học kì không hợp lệ" });
   }
   
   try {
@@ -798,16 +787,10 @@ export const deleteAdminTerm = async (req, res) => {
   const { termCode } = req.params; // Lấy mã kỳ từ URL
 
   try {
-    /*
-    const checkUsage = await pool.query(
-        `SELECT 1 FROM drl.term_score WHERE term_code = $1 LIMIT 1`,
-        [termCode]
-    );
+    const checkUsage = await pool.query(`SELECT 1 FROM drl.term_score WHERE term_code = $1 LIMIT 1`, [termCode]);
     if (checkUsage.rowCount > 0) {
-        return res.status(400).json({ error: 'term_in_use_by_scores', message: 'Không thể xóa học kỳ đã có điểm.' });
+      return res.status(400).json({ error:'Không thể xóa học kỳ đã có điểm.' });
     }
-    // Kiểm tra tương tự với các bảng khác nếu cần...
-    */
 
     const rows = await deletdeAdSemester(termCode);
     return res.status(200).json({ ok: true, message: `Học kỳ ${termCode} đã được xóa.`,delete:rows[0]});
