@@ -1,8 +1,9 @@
 import pool from "../db.js";
 import { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId,getConfig,} from "../utils/helpers.js";
 import { getSearchClassStudents } from "../models/adminModel/adminModel.js";
-import {getGroupCri, postGroupCri, putGroupCri,deleteGroupCri} from "../models/adminModel/groupMModel.js";
 
+import {getGroupCri, postGroupCri, putGroupCri,deleteGroupCri} from "../models/adminModel/groupMModel.js";
+import { getAdSemester,postAdSemester,putAdSemester,deletdeAdSemester, putAdSemesterStatus } from "../models/adminModel/semesterMModel.js";
 
 // --- Helpers cho Admin ---
 // (Có thể thêm middleware kiểm tra role Admin ở đây hoặc trong routes/admin.js)
@@ -371,6 +372,18 @@ export const updateCriterion = async (req, res, next) => {
   if (!id || !code || !title) {
     return res.status(400).json({ error: "missing_id_or_body_fields" });
   }
+  
+  // Validate max_points
+  if (max_points !== null && max_points !== undefined) {
+    const maxPointsNum = Number(max_points);
+    if (isNaN(maxPointsNum) || maxPointsNum < 0) {
+      return res.status(400).json({ 
+        error: "invalid_max_points",
+        message: "Điểm tối đa phải là số không âm" 
+      });
+    }
+  }
+  
   const _type = ["radio", "text", "auto"].includes(type) ? type : "radio";
   const { GROUP_TBL, HAS_GROUP_ID, GROUP_ID_NOT_NULL } = getConfig();
   let finalGroupId = null;
@@ -496,7 +509,7 @@ export const updateCriterion = async (req, res, next) => {
     if (err.code === "23505")
       return res
         .status(409)
-        .json({ error: "duplicate_criterion_code_update", detail: err.detail });
+        .json({ error: "Trùng mã tiêu chí!", detail: err.detail });
     if (err.code === "23502")
       return res.status(400).json({
         error: "missing_required_criterion_field_update",
@@ -585,6 +598,36 @@ export const updateCriterionOptions = async (req, res, next) => {
     if (critCheck.rows[0].type !== "radio")
       throw new Error("criterion_not_radio");
 
+    // Get criterion's max_points for validation
+    const criterionMaxPoints = await client.query(
+      `SELECT max_points FROM drl.criterion WHERE id = $1`,
+      [criterion_id]
+    );
+    const maxPoints = criterionMaxPoints.rows[0]?.max_points || 0;
+
+    // Validate radio type has options
+    if (options.length === 0) {
+      throw new Error("radio_requires_options");
+    }
+
+    // Validate each option before processing
+    for (const opt of options) {
+      const label = (opt.label || "").trim();
+      if (!label) continue; // Skip empty labels
+      
+      const score = toNum(opt.score) || 0;
+      
+      // Check negative score
+      if (score < 0) {
+        throw new Error("option_score_negative");
+      }
+      
+      // Check score exceeds max_points
+      if (maxPoints > 0 && score > maxPoints) {
+        throw new Error("option_score_exceeds_max");
+      }
+    }
+
     // 2. Bỏ liên kết option_id trong self_assessment trước khi xóa options
     await client.query(
       `UPDATE drl.self_assessment SET option_id = NULL
@@ -637,6 +680,21 @@ export const updateCriterionOptions = async (req, res, next) => {
       err.message === "criterion_not_radio"
     ) {
       res.status(404).json({ error: err.message });
+    } else if (err.message === "radio_requires_options") {
+      res.status(400).json({ 
+        error: "radio_requires_options",
+        message: "Tiêu chí dạng radio phải có ít nhất 1 lựa chọn" 
+      });
+    } else if (err.message === "option_score_negative") {
+      res.status(400).json({ 
+        error: "option_score_negative",
+        message: "Điểm số không được âm" 
+      });
+    } else if (err.message === "option_score_exceeds_max") {
+      res.status(400).json({ 
+        error: "option_score_exceeds_max",
+        message: "Điểm số vượt quá điểm tối đa của tiêu chí" 
+      });
     } else {
       next(err);
     }
@@ -645,227 +703,104 @@ export const updateCriterionOptions = async (req, res, next) => {
   }
 };
 
-// Lấy danh sách học kỳ KÈM trạng thái mở/khóa đánh giá
-export const getTermsWithStatus = async (req, res, next) => {
-  // Có thể không cần filter theo term query param ở đây
-  try {
-    const { rows } = await pool.query(
-      `SELECT code, title, year, semester, is_active, is_assessment_open
-       FROM ref.term
-       ORDER BY year DESC, semester DESC`
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error("Admin Get Terms With Status Error:", err);
-    next(err);
-  }
-};
-
+//hhhhhhhhhhhhhhhhhhh
 // Cập nhật trạng thái mở/khóa đánh giá cho một học kỳ
 export const setTermAssessmentStatus = async (req, res, next) => {
   const { termCode } = req.params;
-  const { isOpen } = req.body; // Frontend sẽ gửi { isOpen: true } hoặc { isOpen: false }
+  const { isOpen } = req.body;
 
   if (typeof isOpen !== "boolean") {
-    return res.status(400).json({ error: "invalid_is_open_value" });
+    return res.status(400).json({ error: "Sai kiểu dữ liệu" });
   }
 
   try {
-    const result = await pool.query(
-      "UPDATE ref.term SET is_assessment_open = $1 WHERE code = $2 RETURNING code, is_assessment_open",
-      [isOpen, termCode]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "term_not_found" });
-    }
-
-    res.json({
-      ok: true,
-      termCode: result.rows[0].code,
-      isAssessmentOpen: result.rows[0].is_assessment_open,
+    const rows = await putAdSemesterStatus(isOpen,termCode);
+    res.json({ok: true,termCode: rows[0].code,isAssessmentOpen: rows[0].is_active,
       message: `Đã ${isOpen ? "mở" : "khóa"} đánh giá cho kỳ ${termCode}.`,
     });
-  } catch (err) {
-    console.error("Admin Set Term Assessment Status Error:", err);
-    next(err);
+  } catch (error) {
+    console.error("Lỗi ở setTermAssessmentStatus", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 
-export const getAdminTerms = async (req, res, next) => {
-  // Thêm is_assessment_open vào SELECT
+//Lấy danh sách học kì
+export const getAdminTerms = async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      `SELECT code, title, year, semester, start_date, end_date, is_active, is_assessment_open
-             FROM ref.term
-             ORDER BY year DESC, semester DESC
-             LIMIT 8`
-    );
+    const rows = await getAdSemester();
     res.json(rows);
-  } catch (err) {
-    console.error("Admin Get Terms Error:", err);
-    next(err);
+  } catch (error) {
+    console.error("Lỗi ở getAdminTerms", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 
 export const createAdminTerm = async (req, res, next) => {
-  const { code, title, year, semester, start_date, end_date, is_active } =
-    req.body;
+  const { code, title, year, semester, start_date, end_date, is_active } = req.body;
 
   // --- Validation cơ bản ---
-  if (!code || !title || !year || !semester) {
-    return res.status(400).json({ error: "missing_required_term_fields" });
+  if (!code || !title || !year || !semester || !start_date || !end_date || !is_active) {
+    return res.status(400).json({ error: "Thiếu dữ liệu đầu vào" });
   }
   if (![1, 2, 3].includes(semester)) {
-    return res.status(400).json({ error: "invalid_semester_value" });
+    return res.status(400).json({ error: "Học kì không hợp lệ" });
   }
-  const checkSmesterInTerm = await pool.query(
-    `SELECT 1 FROM ref.term WHERE year = $1 AND semester = $2 LIMIT 1`,
-    [year, semester]
-  );
+  const checkSmesterInTerm = await pool.query(`SELECT 1 FROM ref.term WHERE year = $1 AND semester = $2 LIMIT 1`,[year, semester]);
   if (checkSmesterInTerm.rowCount > 0) {
-    return res
-      .status(409)
-      .json({
-        error: "Kỳ học này đã tồn tại",
-      });
+    return res.status(409).json({error: "Kỳ học này đã tồn tại",});
   }
-  // --- Hết Validation ---
 
   try {
-    const result = await pool.query(
-      `INSERT INTO ref.term (code, title, year, semester, start_date, end_date, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`, // Trả về toàn bộ term vừa tạo
-      [
-        code.trim(),
-        title.trim(),
-        year,
-        semester,
-        start_date || null, // Gửi null nếu không có
-        end_date || null, // Gửi null nếu không có
-        is_active !== undefined ? is_active : true, // Mặc định là true
-      ]
-    );
-
-    res.status(201).json(result.rows[0]); // Trả về term mới với status 201 Created
-  } catch (err) {
-    console.error("Admin Create Term Error:", err);
-    if (err.code === "23505") {
-      // Lỗi unique constraint (trùng mã code)
-      return res
-        .status(409)
-        .json({ error: "duplicate_term_code", detail: err.detail });
+    const rows = await postAdSemester(code, title, year, semester, start_date, end_date, is_active);
+    res.status(201).json(rows[0]);
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "Học kì này đã có", detail: error.detail });
     }
-    next(err); // Chuyển lỗi khác cho error handler
+    
+    console.error("Lỗi ở createAdminTerm", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 
-export const updateAdminTerm = async (req, res, next) => {
-  const { termCode } = req.params; // Lấy mã kỳ từ URL
-  // Lấy dữ liệu cần cập nhật từ body, không cho phép cập nhật 'code'
-  const {
-    title,
-    year,
-    semester,
-    start_date,
-    end_date,
-    is_active,
-    is_assessment_open,
-  } = req.body;
+export const updateAdminTerm = async (req, res) => {
+  const { termCode } = req.params;
+  const {title, year,semester,start_date, end_date, is_active} = req.body;
 
-  // --- Validation cơ bản ---
-  if (!title || !year || !semester) {
-    return res
-      .status(400)
-      .json({ error: "missing_required_term_fields_for_update" });
+  if (!title || !year || !semester || !start_date || !end_date || !is_active) {
+    return res.status(400).json({ error: "Thiếu dữ liệu" });
   }
   if (![1, 2, 3].includes(semester)) {
-    return res.status(400).json({ error: "invalid_semester_value" });
+    return res.status(400).json({ error: "Học kì không hợp lệ" });
   }
-  // --- Hết Validation ---
-
+  
   try {
-    const result = await pool.query(
-      `UPDATE ref.term
-       SET title = $1,
-           year = $2,
-           semester = $3,
-           start_date = $4,
-           end_date = $5,
-           is_active = $6,
-           is_assessment_open = $7
-       WHERE code = $8
-       RETURNING *`, // Trả về toàn bộ term đã cập nhật
-      [
-        title.trim(),
-        year,
-        semester,
-        start_date || null,
-        end_date || null,
-        is_active !== undefined ? is_active : true, // Giữ giá trị cũ nếu không gửi lên? Hoặc mặc định true?
-        is_assessment_open !== undefined ? is_assessment_open : true, // Giữ giá trị cũ nếu không gửi?
-        termCode, // Mã kỳ để tìm và cập nhật
-      ]
-    );
-
-    // Kiểm tra xem có dòng nào được cập nhật không
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "term_not_found_for_update" });
-    }
-
-    res.status(200).json(result.rows[0]); // Trả về term đã cập nhật
-  } catch (err) {
-    console.error("Admin Update Term Error:", err);
-    // Không nên có lỗi trùng code vì không cho cập nhật code
-    next(err); // Chuyển lỗi khác cho error handler
+    const rows = await putAdSemester(title, year, semester, start_date, end_date, is_active, termCode);
+    res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error("Lỗi ở updateAdminTerm", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 
-// --- THÊM HÀM NÀY VÀO backend/controllers/adminController.js ---
-
-export const deleteAdminTerm = async (req, res, next) => {
+export const deleteAdminTerm = async (req, res) => {
   const { termCode } = req.params; // Lấy mã kỳ từ URL
 
   try {
-    // Trước khi xóa, cần đảm bảo không có dữ liệu nào khác tham chiếu đến term này
-    // (ví dụ: drl.term_score, drl.criterion, drl.self_assessment)
-    // Nếu có ràng buộc khóa ngoại (FOREIGN KEY) với ON DELETE RESTRICT (mặc định),
-    // câu lệnh DELETE sẽ báo lỗi nếu có dữ liệu tham chiếu.
-    // Nếu là ON DELETE CASCADE, dữ liệu tham chiếu sẽ bị xóa theo (cẩn thận!)
-    // --> Cách an toàn nhất là kiểm tra trước khi xóa:
-    /*
-    const checkUsage = await pool.query(
-        `SELECT 1 FROM drl.term_score WHERE term_code = $1 LIMIT 1`,
-        [termCode]
-    );
+    const checkUsage = await pool.query(`SELECT 1 FROM drl.term_score WHERE term_code = $1 LIMIT 1`, [termCode]);
     if (checkUsage.rowCount > 0) {
-        return res.status(400).json({ error: 'term_in_use_by_scores', message: 'Không thể xóa học kỳ đã có điểm.' });
-    }
-    // Kiểm tra tương tự với các bảng khác nếu cần...
-    */
-
-    const result = await pool.query(`DELETE FROM ref.term WHERE code = $1`, [
-      termCode,
-    ]);
-
-    // Kiểm tra xem có dòng nào bị xóa không
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "term_not_found_for_delete" });
+      return res.status(400).json({ error:'Không thể xóa học kỳ đã có điểm.' });
     }
 
-    res
-      .status(200)
-      .json({ ok: true, message: `Học kỳ ${termCode} đã được xóa.` }); // Hoặc trả về 204 No Content
-  } catch (err) {
-    console.error("Admin Delete Term Error:", err);
-    if (err.code === "23503") {
+    const rows = await deletdeAdSemester(termCode);
+    return res.status(200).json({ ok: true, message: `Học kỳ ${termCode} đã được xóa.`,delete:rows[0]});
+  } catch (error) {
+    if (error.code === "23503") {
       // Lỗi Foreign Key Violation
-      return res.status(400).json({
-        error: "Không thể xóa học kỳ đã có dữ liệu đánh giá",
-      });
+      return res.status(400).json({ error: "Không thể xóa học kỳ đã có dữ liệu đánh giá", });
     }
-    next(err); // Chuyển lỗi khác cho error handler
+    console.error("Lỗi ở deleteAdminTerm", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 

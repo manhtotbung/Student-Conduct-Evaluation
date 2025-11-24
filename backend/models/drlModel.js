@@ -2,15 +2,16 @@ import pool from '../db.js';
 
 //Lấy danh sách tiêu chí DRL
 export const getCriteria = async (term) =>{
-    const query = `select c.id, c.term_code, c.code, c.title, c.type,c.max_points,cg.title as group_title,c.require_hsv_verify,
+    const query = `select c.id, c.term_code, c.code, c.title, c.type,c.max_points,cg.title as group_title,cg.code as group_code,c.require_hsv_verify,
       coalesce((
         select json_agg(
           json_build_object(
             'id', o.id,
             'label', o.label,
-            'score', o.score
+            'score', o.score,
+            'display_order', o.display_order
           )
-          order by o.id
+          order by o.display_order, o.id
         )
         from drl.criterion_option o
         where o.criterion_id = c.id
@@ -70,17 +71,8 @@ export const postSelfAssessment = async (student_code, term_code, items) =>{
         option_id = excluded.option_id,
         text_value = excluded.text_value,
         self_score = excluded.self_score,
-        updated_at = now(); `,
-      
-        [
-        student_id,
-        term_code,
-        it.criterion_id,
-        it.option_id || null,
-        it.text_value || null,
-        it.score || 0,
-      ]
-    );
+        updated_at = now(); `,      
+        [student_id,term_code,it.criterion_id, it.option_id || null, it.text_value || null,it.score || 0]);
   }
 
   //Tính tổng và lưu điểm 
