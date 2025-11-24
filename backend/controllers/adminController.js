@@ -1,8 +1,7 @@
 import pool from "../db.js";
 import { toNum, parseGroupId, validateGroupIdMaybe, pickFallbackGroupId,getConfig,} from "../utils/helpers.js";
 import { getSearchClassStudents } from "../models/adminModel/adminModel.js";
-import {getGroupCri, postGroupCri, putGroupCri,deleteGroupCri} from "../models/adminModel/groupMModel.js";
-import {getCriterionById, getCriterionWithTerm,findOrCreateGroup, upsertCriterion, updateCriterionById,deleteCriterionCascade,getCriterionType, getCriterionMaxPoints,replaceCriterionOptions} from '../models/adminModel/criteriaModel.js';
+import {getCriterionById, getCriterionWithTerm,findOrCreateGroup, upsertCriterion, updateCriterionById,deleteCriterionCascade,getCriterionType, getCriterionMaxPoints,replaceCriterionOptions} from '../models/adminModel/criteriaMModel.js';
 
 import {getGroupCri, postGroupCri, putGroupCri,deleteGroupCri} from "../models/adminModel/groupMModel.js";
 import { getAdSemester,postAdSemester,putAdSemester,deletdeAdSemester, putAdSemesterStatus } from "../models/adminModel/semesterMModel.js";
@@ -105,7 +104,7 @@ export const getClassStudents = async (req, res, next) => {
 };
 
 // --- Group Controllers (CRUD Groups) ---
-//Lấy danh sách nhóm tiêu chí
+//Lấy danh sách Group
 export const getGroups = async (req, res) => {
   const { term } = req.query || {};
   if (!term) return res.status(400).json({ error: "Không tìm thấy năm học" });
@@ -119,7 +118,7 @@ export const getGroups = async (req, res) => {
   }
 };
 
-// Tạo mới nhóm tiêu chí
+// Tạo mới Group
 export const createGroup = async (req, res) => {
   // Cần term_code, code, title từ body
   const { term_code, code, title } = req.body;
@@ -525,7 +524,6 @@ export const getAdminTerms = async (req, res) => {
 export const createAdminTerm = async (req, res, next) => {
   const { code, title, year, semester, start_date, end_date, is_active } = req.body;
   console.log(req.body);
-  // --- Validation cơ bản ---
   if (!code || !title || !year || !semester || !start_date || !end_date || !is_active) {
     return res.status(400).json({ error: "Thiếu dữ liệu đầu vào" });
   }
