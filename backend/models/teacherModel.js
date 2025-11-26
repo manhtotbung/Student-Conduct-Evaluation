@@ -35,7 +35,7 @@ export const getStudentsNot = async (username, term, class_code) => {
   return rows;
 };
 
-export const postStudentAssessment = async (username, term_code, class_code)=>{
+export const postStudentAllNotAssessment = async (username, term_code, class_code)=>{
   //Danh sách sinh viên chưa đánh giá
   const allStudentNot = await getStudentsNot(username, term_code, class_code);
 
@@ -66,10 +66,5 @@ export const postStudentAssessment = async (username, term_code, class_code)=>{
       do update set total_score = 0, updated_at = now(), rank = drl.rank_by_score(0);`, [student_id, term_code]);
   }
 
-  return { 
-    message: "Đã tự đánh giá 0 điểm cho tất cả sinh viên chưa đánh giá",
-    total_students: students.length 
-  };
-
-
+  return {message: "Đã tự đánh giá 0 điểm cho tất cả sinh viên chưa đánh giá",total_students: students.length };
 };
