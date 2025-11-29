@@ -562,103 +562,26 @@ export const deleteAdminTerm = async (req, res) => {
 };
 
 //hhhhhhhhhhhh
-// --- THÊM HÀM MỚI ĐỂ SAO CHÉP TIÊU CHÍ ---
-export const copyCriteriaFromTerm = async (req, res, next) => {
+// --- SAO CHÉP TIÊU CHÍ ---
+export const copyCriteriaFromTerm = async (req, res) => {
   const { sourceTermCode, targetTermCode } = req.body;
   // Kiểm tra đầu vào cơ bản
   if (!sourceTermCode || !targetTermCode) {
-    return res.status(400).json({ error: "missing_source_or_target_term" });
+    return res.status(400).json({ error: "Thiếu dữ liệu đầu vào" });
   }
   if (sourceTermCode === targetTermCode) {
-    return res.status(400).json({ error: "source_and_target_cannot_be_same" });
+    return res.status(400).json({ error: "Hai kì học không thể giống nhau" });
   }
 
   try {
-    //Kiểm tra bảng criteria_group đã có dữ liệu của kì đích chưa
-    const isTargetTermCodeInCriteria_group = await pool.query(
-      `select 1
-      from drl.criteria_group 
-      where term_code = $1`,
-      [targetTermCode]
-    );
+    //Kiểm tra kì mới đã có dữ liệu chưa
+    await checkCopyCriteria(sourceTermCode, targetTermCode);
 
-    if (isTargetTermCodeInCriteria_group.rowCount  != 0) {
-      return res
-        .status(400)
-        .json({ error: "Kì đích đã có dữ liệu nên không thể sao chép" });
-    }
-
-    if (isTargetTermCodeInCriteria_group.rowCount == 0) {
-      //Sao chép kì đích sang kì nguồn bảng criteria_group
-      await pool.query(
-        `insert into drl.criteria_group (term_code, code, title)
-        select $1, code, title
-        from drl.criteria_group where term_code=$2`,
-        [targetTermCode, sourceTermCode]
-      );
-    }
-
-    //Kiểm tra bảng criterion đã có dữ liệu của kì đích chưa
-    const isTargetTermCodeInCriterion = await pool.query(
-      `select 1
-      from drl.criterion 
-      where term_code = $1`,
-      [targetTermCode]
-    );
-    if (isTargetTermCodeInCriterion.rowCount == 0) {
-      //Lấy id của kì đích trong bảng criteria_group
-      const idTargetTermCode = await pool.query(
-        `select id
-        from drl.criteria_group cg
-        where cg.term_code = $1`,
-        [targetTermCode]
-      );
-
-      for (const element of idTargetTermCode.rows) {
-        //Lấy id của kì nguồn trong bảng criteria_group
-        const idSourceTermCode = await pool.query(
-          `select id from drl.criteria_group
-          where term_code=$2 and title=(select title from drl.criteria_group
-          where id=$1)`,
-          [element.id, sourceTermCode]
-        );
-        //Sao chép kì nguồn đến kì đích trong bảng criterion
-        await pool.query(
-          `insert into drl.criterion (term_code, group_id, code, title, type, max_points, display_order, require_hsv_verify)
-          select $1, $2, code, title, type, max_points, display_order, require_hsv_verify
-          from drl.criterion where group_id = $3`,
-          [targetTermCode, element.id, idSourceTermCode.rows[0].id]
-        );
-      }
-    }
-
-    const idTargetTermCode = await pool.query(
-      `select id from drl.criterion 
-      where term_code = $1`,
-      [targetTermCode]
-    );
-    console.log("idTarget", idTargetTermCode.rows);
-    for (const element of idTargetTermCode.rows) {
-      const idSourceTermCode = await pool.query(
-        `select id from drl.criterion
-        where term_code=$1 and title=(select title from drl.criterion
-        where id=$2)`,
-        [sourceTermCode, element.id]
-      );
-      console.log("idSource", idSourceTermCode.rows);
-      await pool.query(
-        `insert into drl.criterion_option (criterion_id, label, score, display_order)
-        select $1, label, score, display_order
-        from drl.criterion_option
-        where criterion_id = $2`,
-        [element.id, idSourceTermCode.rows[0].id]
-      );
-    }
-
-    // Trả về kết quả thành công
+    //Sao chép dữ liệu
+    await copyCriteria(sourceTermCode, targetTermCode);
     res.json({ ok: true });
-  } catch (err) {
-    if (err.code) {
+  } catch (error) {
+    if (error.code) {
       // Check if it's a PostgreSQL error object
       console.error("--- Failing Query Hint ---");
       console.error("Error Code:", err.code);
@@ -666,8 +589,8 @@ export const copyCriteriaFromTerm = async (req, res, next) => {
       console.error("Error Constraint:", err.constraint);
       console.error("------------------------");
     }
-    // Chuyển lỗi cho middleware xử lý lỗi chung
-    next(err);
+    console.error("Lỗi ở copyCriteriaFromTerm", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
   }
 };
 
@@ -684,5 +607,3 @@ export const searchClass = async (req, res) => {
     res.status(500).json({ error: "Lỗi hệ thống", detail: error.message });
   }
 };
-
-// --- HẾT THAY THẾ ---
