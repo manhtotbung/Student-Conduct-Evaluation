@@ -1,9 +1,6 @@
 import pool from "../../db.js";
 import { getConfig, toNum, validateGroupIdMaybe, pickFallbackGroupId } from "../../utils/helpers.js";
 
-// CONSTANTS
-const DEFAULT_DISPLAY_ORDER = 999;
-
 // Error codes
 export const CRITERION_ERRORS = {
   NOT_FOUND: "Không tìm thấy tiêu chí!",
@@ -200,11 +197,11 @@ export const upsertCriterionWithGroup = async (criterionData, groupCode) => {
   }
 
   const { rows } = await pool.query(
-    `INSERT INTO drl.criterion(term_code, code, title, type, max_points, display_order, group_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO drl.criterion(term_code, code, title, type, max_points, group_id)
+     VALUES ($1, $2, $3, $4, $5, $6)
      ON CONFLICT (term_code, code) DO UPDATE SET
        title = EXCLUDED.title, type = EXCLUDED.type, max_points = EXCLUDED.max_points,
-       display_order = EXCLUDED.display_order, group_id = EXCLUDED.group_id
+       group_id = EXCLUDED.group_id
      RETURNING *`,
     [
       criterionData.term_code,
@@ -212,7 +209,6 @@ export const upsertCriterionWithGroup = async (criterionData, groupCode) => {
       criterionData.title,
       criterionData.type,
       toNum(criterionData.max_points) || 0,
-      toNum(criterionData.display_order) ?? DEFAULT_DISPLAY_ORDER,
       HAS_GROUP_ID ? group_id : null
     ]
   );
@@ -258,10 +254,9 @@ export const updateCriterionWithGroupAndValidation = async (id, criterionData, g
     criterionData.title,
     criterionData.type,
     toNum(criterionData.max_points) || 0,
-    toNum(criterionData.display_order) ?? DEFAULT_DISPLAY_ORDER,
     criterionData.require_hsv_verify
   ];
-  let setClauses = "code=$1, title=$2, type=$3, max_points=$4, display_order=$5, require_hsv_verify=$6";
+  let setClauses = "code=$1, title=$2, type=$3, max_points=$4, require_hsv_verify=$5";
 
   if (HAS_GROUP_ID) {
     setClauses += `, group_id=$${params.length + 1}`;
@@ -299,4 +294,44 @@ export const updateCriterionOptionsWithValidation = async (criterion_id, options
   });
 };
 
+//Kiểm tra dữ liệu
+export const checkCopyCriteria = async (sourceTermCode, targetTermCode) => {
+   //Kiểm tra kì đích đã có dữ liệu chưa
+  const target_TermCode= await pool.query(`select 1 from drl.criteria_group where term_code = $1`,[targetTermCode]);
+  if (target_TermCode.rowCount != 0)  throw { status: 400, message: "Kì đích đã có dữ liệu nên không thể sao chép" };
 
+  return true;
+};
+// Sao chep tieu chi
+export const copyCriteria = async (sourceTermCode, targetTermCode) => {
+  //Sao chép criteria_Group
+  await pool.query(`insert into drl.criteria_group (term_code, code, title)
+    select $1, code, title
+    from drl.criteria_group where term_code=$2`,[targetTermCode, sourceTermCode]);
+
+  // Sao chép criterion
+  const targetGroups = await pool.query(`select id, title from drl.criteria_group where term_code = $1`,[targetTermCode]);
+  
+  for (let i = 0;i < targetGroups.rows.length;i++) {
+    const group = targetGroups.rows[i];
+    const sourceGroup = await pool.query(`select id from drl.criteria_group where term_code = $1 AND title = $2`,[sourceTermCode, group.title]);
+
+    await pool.query(`insert into drl.criterion (term_code, group_id, code, title, type, max_points, display_order, require_hsv_verify)
+      select $1, $2, code, title, type, max_points, display_order, require_hsv_verify
+      from drl.criterion where group_id = $3`,[targetTermCode, group.id, sourceGroup.rows[0].id]); 
+  };
+
+  // Sao chép criterion_option  
+  const targetCriteria = await pool.query(`select id, title from drl.criterion where term_code = $1`,[targetTermCode] );
+
+  for (let i = 0;i< targetCriteria.rows.length;i++) {
+    const criterion = targetCriteria.rows[0];
+    const sourceCri = await pool.query(`select id from drl.criterion where term_code = $1 and title = $2`,[sourceTermCode, criterion.title]);
+
+    await pool.query(`insert into drl.criterion_option (criterion_id, label, score, display_order)
+      select $1, label, score, display_order
+      from drl.criterion_option
+      where criterion_id = $2`,[criterion.id, sourceCri.rows[0].id]);
+  }
+  return true;
+};
