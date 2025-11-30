@@ -10,7 +10,7 @@ export const getCriteria = async (term) =>{
             'label', o.label,
             'score', o.score
           )
-          order by o.id
+          ORDER BY o.id
         )
         from drl.criterion_option o
         where o.criterion_id = c.id
