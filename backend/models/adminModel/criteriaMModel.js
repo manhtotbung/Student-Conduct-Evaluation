@@ -294,6 +294,11 @@ export const updateCriterionOptionsWithValidation = async (criterion_id, options
   });
 };
 
+//Kiểm tra dữ liệu
+export const checkdeleteAllCriteria = async (term_code) => {
+  const result = await pool.query(`select 1 from  drl.self_assessment where term_code = $1 limit 1`,[term_code]);
+  return result.rowCount > 0;
+};
 //Xóa tất cả tiêu chí
 export const deleteAllCriteria = async (term_code) => {
   //Xóa lựa chọn 

@@ -14,7 +14,8 @@ import {
   updateCriterionOptionsWithValidation,
   checkCopyCriteria,
   copyCriteria,
-  deleteAllCriteria
+  checkdeleteAllCriteria,
+  deleteAllCriteria,
 } from "../models/adminModel/criteriaMModel.js";
 
 import {
@@ -563,6 +564,10 @@ export const deleteAllCriteriaAd = async (req,res) => {
   const {term_code} = req.params;
 
   try {
+    const check = await checkdeleteAllCriteria(term_code); 
+    if(check){
+      return res.status(400).json({ok: false, message: 'Không thể xóa vì đã được sinh viên đánh giá'});
+    }
     await deleteAllCriteria(term_code);
     return res.status(200).json({ok: true, message: `Đã xóa tiêu chí`,});
   } catch (error) {
