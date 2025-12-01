@@ -14,6 +14,7 @@ import {
   updateCriterionOptionsWithValidation,
   checkCopyCriteria,
   copyCriteria,
+  deleteAllCriteria
 } from "../models/adminModel/criteriaMModel.js";
 
 import {
@@ -137,11 +138,10 @@ export const deleteGroup = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const rows = await deleteGroupCri(id);
+    await deleteGroupCri(id);
     res.status(200).json({
       ok: true,
       message: "Nhóm tiêu chí đã được xóa.",
-      deletde: rows[0],
     });
   } catch (error) {
     if (error.status === 400) {
@@ -154,7 +154,6 @@ export const deleteGroup = async (req, res) => {
 };
 
 // --- Criteria Controllers (CRUD Criteria & Options) ---
-
 // Tạo mới (hoặc Upsert - tùy logic bạn muốn)
 export const createOrUpdateCriterion = async (req, res, next) => {
   const {
@@ -528,7 +527,7 @@ export const updateAdminTerm = async (req, res) => {
 };
 
 export const deleteAdminTerm = async (req, res) => {
-  const { termCode } = req.params; // Lấy mã kỳ từ URL
+  const { termCode } = req.params;
 
   try {
     const checkUsage = await pool.query(
@@ -541,11 +540,10 @@ export const deleteAdminTerm = async (req, res) => {
         .json({ error: "Không thể xóa học kỳ đã có điểm." });
     }
 
-    const rows = await deletdeAdSemester(termCode);
+    await deletdeAdSemester(termCode);
     return res.status(200).json({
       ok: true,
       message: `Học kỳ ${termCode} đã được xóa.`,
-      delete: rows[0],
     });
   } catch (error) {
     if (error.code === "23503") {
@@ -560,7 +558,21 @@ export const deleteAdminTerm = async (req, res) => {
 };
 
 //hhhhhhhhhhhh
-// --- SAO CHÉP TIÊU CHÍ ---
+//Xóa tất cả tiêu chí 
+export const deleteAllCriteriaAd = async (req,res) => {
+  const {term_code} = req.params;
+
+  try {
+    await deleteAllCriteria(term_code);
+    return res.status(200).json({ok: true, message: `Đã xóa tiêu chí`,});
+  } catch (error) {
+    console.error("Lỗi ở deleteAllCriteriaAd", error);
+    return res.status(500).json({ error: "Lỗi hệ thống" });
+  }
+};
+
+
+// Sao chép tiêu chí
 export const copyCriteriaFromTerm = async (req, res) => {
   const { sourceTermCode, targetTermCode } = req.body;
   // Kiểm tra đầu vào cơ bản
@@ -579,14 +591,6 @@ export const copyCriteriaFromTerm = async (req, res) => {
     await copyCriteria(sourceTermCode, targetTermCode);
     res.json({ ok: true });
   } catch (error) {
-    if (error.code) {
-      // Check if it's a PostgreSQL error object
-      console.error("--- Failing Query Hint ---");
-      console.error("Error Code:", err.code);
-      console.error("Error Detail:", err.detail);
-      console.error("Error Constraint:", err.constraint);
-      console.error("------------------------");
-    }
     console.error("Lỗi ở copyCriteriaFromTerm", error);
     return res.status(500).json({ error: "Lỗi hệ thống" });
   }

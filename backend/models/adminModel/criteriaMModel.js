@@ -294,6 +294,17 @@ export const updateCriterionOptionsWithValidation = async (criterion_id, options
   });
 };
 
+//Xóa tất cả tiêu chí
+export const deleteAllCriteria = async (term_code) => {
+  //Xóa lựa chọn 
+  await pool.query(`delete from drl.criterion_option where criterion_id in (select id from drl.criterion where term_code = $1)`,[term_code]);
+
+  //Xóa tiêu chí
+  await pool.query(`delete from drl.criterion where term_code = $1`,[term_code]);
+  return true;  
+};
+
+
 //Kiểm tra dữ liệu
 export const checkCopyCriteria = async (targetTermCode) => {
    //Kiểm tra kì đích đã có dữ liệu chưa
@@ -325,7 +336,7 @@ export const copyCriteria = async (sourceTermCode, targetTermCode) => {
   const targetCriteria = await pool.query(`select id, title from drl.criterion where term_code = $1`,[targetTermCode] );
 
   for (let i = 0;i< targetCriteria.rows.length;i++) {
-    const criterion = targetCriteria.rows[0];
+    const criterion = targetCriteria.rows[i];
     const sourceCri = await pool.query(`select id from drl.criterion where term_code = $1 and title = $2`,[sourceTermCode, criterion.title]);
 
     await pool.query(`insert into drl.criterion_option (criterion_id, label, score)
