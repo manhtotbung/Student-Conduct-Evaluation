@@ -561,14 +561,14 @@ export const deleteAdminTerm = async (req, res) => {
 //hhhhhhhhhhhh
 //Xóa tất cả tiêu chí 
 export const deleteAllCriteriaAd = async (req,res) => {
-  const {term_code} = req.params;
-
+  const {termCode} = req.query;
+  console.log(termCode);
   try {
-    const check = await checkdeleteAllCriteria(term_code); 
+    const check = await checkdeleteAllCriteria(termCode); 
     if(check){
       return res.status(400).json({ok: false, message: 'Không thể xóa vì đã được sinh viên đánh giá'});
     }
-    await deleteAllCriteria(term_code);
+    await deleteAllCriteria(termCode);
     return res.status(200).json({ok: true, message: `Đã xóa tiêu chí`,});
   } catch (error) {
     console.error("Lỗi ở deleteAllCriteriaAd", error);
