@@ -156,13 +156,13 @@ const HSVStudentRow = ({ student, term, onUpdate }) => {
   return (
     <tr className={isVerified ? 'table-success' : ''}>
       <td className="align-middle">
-        <Badge bg="secondary">{student.criterion_code}</Badge>
+        <Badge bg="success">{student.criterion_code}</Badge>
         {student.criterion_title && (
           <div className="small text-muted mt-1">{student.criterion_title}</div>
         )}
       </td>
       <td className="text-center align-middle">
-        <Badge bg={currentScore > 0 ? 'success' : 'secondary'} className="fs-6">
+        <Badge bg='success' className="fs-6">
           {currentScore}
         </Badge>
       </td>
@@ -191,7 +191,6 @@ const HSVStudentRow = ({ student, term, onUpdate }) => {
               checked={isChecked}
               onChange={(e) => setIsChecked(e.target.checked)}
               disabled={isVerified || isSaving}
-              label={isChecked ? 'Có tham gia' : 'Không tham gia'}
             />
           </div>
         )}

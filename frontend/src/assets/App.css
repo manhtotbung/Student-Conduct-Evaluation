@@ -30,8 +30,6 @@
 
 .table thead th {
   background: #f0f3f8;
-  position: sticky;
-  top: 0;
 }
 
 .menu-active {
