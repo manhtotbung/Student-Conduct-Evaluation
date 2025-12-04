@@ -30,7 +30,6 @@ let config = {
 // Hàm để cập nhật config từ server.js
 export const setDbConfig = (dbConfig) => {
   config = { ...config, ...dbConfig };
-  // console.log('[Helpers] DB Config updated:', config); // Log để kiểm tra
 };
 
 export const toNum = (v) => (v == null ? null : Number(v));
