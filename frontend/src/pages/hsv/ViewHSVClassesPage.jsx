@@ -96,19 +96,23 @@ const ViewHSVClassesPage = () => {
     <>
       <div className='section-title mb-3'>
         <i className='bi bi-people me-2'></i>
-        HSV – Xác nhận hoạt động ĐTN/HSV (tiêu chí 2.1) – Kỳ <b>{term}</b>
+        HSV – Kỳ <b>{term}</b>
       </div>
 
       {renderContent()}
 
       <Modal show={show} size="xl" onHide={handleClose} scrollable>
         <Modal.Header closeButton>
-          <Modal.Title></Modal.Title>
+          <Modal.Title>
+            <i className="bi bi-people-fill me-2 text-success"></i>
+            Danh sách sinh viên lớp <strong>{selectedClass}</strong>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <HSVStudentList
             classCode={selectedClass}
             term={term}
+            showHeader={false}
           />
         </Modal.Body>
       </Modal>

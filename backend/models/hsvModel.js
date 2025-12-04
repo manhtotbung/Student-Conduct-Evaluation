@@ -37,6 +37,7 @@ export const getStudents = async (class_code, term) =>{
       sa.text_value, 
       sa.is_hsv_verified, 
       sa.hsv_note,
+      o.score,
       -- ✅ Lấy options nếu type = radio
       COALESCE((
         SELECT json_agg(
@@ -54,8 +55,9 @@ export const getStudents = async (class_code, term) =>{
     JOIN ref.class c ON s.class_id = c.id
     LEFT JOIN drl.criterion ctn ON ctn.term_code = $2 AND ctn.require_hsv_verify = TRUE
     LEFT JOIN drl.self_assessment sa ON sa.student_id = s.id AND sa.term_code = $2 AND sa.criterion_id = ctn.id
+    left join drl.criterion_option o on sa.option_id = o.id 
     WHERE c.code = $1
-    ORDER BY c.code, s.student_code;`;
+    ORDER BY c.code, s.student_code`;
 
     const { rows } = await pool.query(query, [class_code, term]);
     return rows;
@@ -150,8 +152,6 @@ export const postConfirm = async (student_code, term_code, criterion_code, parti
             }
         } else {
             // Type = text: Checkbox Có/Không
-            score = participated ? maxp : 0;
-            
             // Lấy text sinh viên đã nhập
             const cur = await client.query(
                 `SELECT text_value FROM drl.self_assessment 
@@ -160,6 +160,10 @@ export const postConfirm = async (student_code, term_code, criterion_code, parti
             );
             
             finalTextValue = cur.rowCount ? cur.rows[0].text_value : null;
+            
+            // ✅ CHỈ cho điểm khi sinh viên CÓ nhập nội dung VÀ participated = true
+            const hasContent = finalTextValue && finalTextValue.trim() !== '';
+            score = (participated && hasContent) ? maxp : 0;
         }
 
         // ✅ FIX 4: Insert/Update với lock
