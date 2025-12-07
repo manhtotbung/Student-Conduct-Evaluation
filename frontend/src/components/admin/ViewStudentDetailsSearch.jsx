@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-bootstrap'; // Import Alert
 import { getCriteria, getSelfAssessment, saveSelfAssessment } from '../../services/drlService';
-import api from '../../services/api'; 
 import LoadingSpinner from '../../components/common/LoadingSpinner'; 
 import AssessmentForm from '../../components/drl/AssessmentForm'; 
 import useNotify from '../../hooks/useNotify'; 
@@ -61,11 +60,6 @@ const ViewStudentDetailsSearch = ({student}) => {
     // Render nội dung chính
     return (
         <div>
-            <div className="section-title mb-3">
-                <i className="bi bi-clipboard2-check me-2"></i>
-                ĐÁNH GIÁ – Kỳ <span className="fw-bold">{student.term}</span>
-            </div>
-
             <AssessmentForm
                 criteria={criteria}
                 selfData={selfData}

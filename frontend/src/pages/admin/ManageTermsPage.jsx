@@ -185,7 +185,7 @@ const ManageTermsPage = () => {
     <>
       <div className='d-flex justify-content-between align-items-center mb-3'>
         <div className='section-title mb-0'>
-          <i className='bi bi-calendar-event-fill me-2'></i> Quản lý Học kỳ & Trạng thái Đánh giá
+          <b>QUẢN LÝ HỌC KỲ & TRẠNG THÁI ĐÁNH GIÁ</b>
         </div>
         <Button size="sm" className="btn-main" variant='success' onClick={() => handleOpenModal(null)}>
           <i className="bi bi-plus-lg me-1"></i> Thêm Học kỳ

@@ -90,8 +90,7 @@ const ViewAllClassesPage = () => {
   return (
     <>
       <div className='section-title mb-3'>
-        <i className='bi bi-people me-2'></i>
-        Tổng hợp toàn bộ các lớp – Kỳ <b>{term}</b>
+        <b>TỔNG HỢP THEO LỚP</b>
       </div>
 
       {renderContent()}

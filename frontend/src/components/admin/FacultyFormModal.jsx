@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button, Form, Spinner } from 'react-bootstrap'; // Import components
-import useNotify from '../../hooks/useNotify'; 
 
-const FacultyFormModal = ({ facultyToEdit, onSave, onClose }) => {
-  const { notify } = useNotify(); 
+const FacultyFormModal = ({ facultyToEdit, onSave, onClose }) => { 
   const [formData, setFormData] = useState({ code: '', name: '' });
   const [isSaving, setIsSaving] = useState(false); 
   const [show, setShow] = useState(true); // State để React-Bootstrap quản lý Modal

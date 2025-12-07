@@ -1,12 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { Card, Form, Row, Col, Button, Table, Alert, Spinner, Modal } from 'react-bootstrap'; // Import components
-import { useTerm } from '../../layout/DashboardLayout';
 import { searchAdminStudents } from '../../services/drlService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StudentSearchDetails from '../../components/admin/StudentSearchDetails';
 
 const SearchStudentsPage = () => {
-  const { term } = useTerm();
   const [searchParams, setSearchParams] = useState({ studentCode: '', name: '', classCode: '' });
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -46,16 +44,11 @@ const SearchStudentsPage = () => {
     setLoading(false);
   }, [searchParams]); // Bỏ term trong dependency vì term không thay đổi khi search
 
-  const handleModalClose = (didSave) => {
-    setSelectedStudent(null);
-  };
-
   return (
     <>
       {/* Tiêu đề trang */}
       <div className='section-title mb-3'>
-        <i className='bi bi-binoculars me-2'></i>
-        Tìm kiếm Sinh viên – Kỳ <b>{term}</b>
+        <b>TÌM KIẾM SINH VIÊN</b>
       </div>
 
       {/* Form tìm kiếm */}
@@ -148,7 +141,8 @@ const SearchStudentsPage = () => {
                       <td className="text-end">
                         <Button
                           size="sm"
-                          variant="outline-success"
+                          variant="success"
+                          className='btn-main'
                           onClick={() => handleShow(s.student_code,s.full_name) }
                         >
                           Xem
@@ -166,11 +160,14 @@ const SearchStudentsPage = () => {
       {/* Render Modal xem/sửa điểm khi selectedStudent có giá trị */}
       <Modal show={show} size='lg' scrollable={true} onHide={handleClose}>
         <Modal.Header closeButton>
+          <Modal.Title>
+            Lịch sử đánh giá - Sinh viên {selectedStudent?.name} ({selectedStudent?.code})  
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedStudent && (
             <StudentSearchDetails
-              user={{ student_code: selectedStudent.code }}
+              user={{ student_code: selectedStudent.code, full_name: selectedStudent.name }}
             />
           )}
         </Modal.Body>

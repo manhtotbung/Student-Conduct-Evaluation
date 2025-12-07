@@ -72,7 +72,7 @@ const TermFormModal = ({ termToEdit, onSave, onClose }) => {
       keyboard={false} // Thay thế data-bs-keyboard="false"
     >
       <Modal.Header closeButton>
-        <Modal.Title>{termToEdit ? 'Sửa Học kỳ' : 'Thêm Học kỳ'}</Modal.Title>
+        <Modal.Title>{termToEdit ? 'Sửa học kỳ' : 'Thêm học kỳ'}</Modal.Title>
       </Modal.Header>
       
       {/* Dùng Form component của React-Bootstrap */}

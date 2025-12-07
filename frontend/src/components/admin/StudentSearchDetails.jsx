@@ -13,9 +13,9 @@ const StudentSearchDetails = ({ user }) => {
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
-  const handleShow = (student_code, term_code) => {
+  const handleShow = (student_code, term_code, full_name) => {
     setShow(true);
-    setSelectedStudent({ code: student_code, term: term_code })
+    setSelectedStudent({ code: student_code, term: term_code, name: full_name })
   }
 
   const fetchData = useCallback(async () => {
@@ -79,9 +79,10 @@ const StudentSearchDetails = ({ user }) => {
               <td className="text-end">
                 {/* Dùng Button variant="outline-primary" size="sm" */}
                 <Button
-                  variant="outline-success"
+                  variant="success"
                   size="sm"
-                  onClick={() => handleShow(user.student_code, item.term_code)}
+                  className='btn-main'
+                  onClick={() => handleShow(user.student_code, item.term_code, user.full_name)}
                 >
                   Xem chi tiết
                 </Button>
@@ -95,14 +96,13 @@ const StudentSearchDetails = ({ user }) => {
 
   return (
     <>
-      <div className='section-title mb-3'>
-        <i className='bi bi-archive-fill me-2'></i>
-        Lịch sử Đánh giá Rèn luyện
-      </div>
       {renderContent()}
 
       <Modal show={show} size='lg' scrollable={true}  onHide={handleClose}>
         <Modal.Header closeButton>
+          <Modal.Title>
+            Đánh giá sinh viên - {selectedStudent?.name} ({selectedStudent?.code}) - {selectedStudent?.term}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedStudent && (

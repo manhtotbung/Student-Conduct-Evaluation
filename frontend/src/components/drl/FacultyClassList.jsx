@@ -157,10 +157,10 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
             <Table striped responsive className="align-middle">
               <thead>
                 <tr>
-                  <th>Mã lớp</th>
-                  <th className="text-end">Sĩ số</th>
-                  <th className="text-end">ĐRL TB</th>
-                  <th></th>
+                  <th style={{borderBottom: "none"}}>Mã lớp</th>
+                  <th className="text-end" style={{borderBottom: "none"}}>Sĩ số</th>
+                  <th className="text-end" style={{borderBottom: "none"}}>ĐRL TB</th>
+                  <th style={{borderBottom: "none"}}></th>
                 </tr>
                 <tr>
                   <th><Form.Control name="classCode" onChange={(e) => setClassCode(e.target.value)} size='sm'></Form.Control></th>
@@ -276,9 +276,6 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
         <Modal.Footer>
           <Button variant="success" onClick={downloadTemplate}>
             Tải file Excel
-          </Button>
-          <Button variant="secondary" onClick={() => setIsPreviewOpen(false)}>
-            Đóng
           </Button>
         </Modal.Footer>
       </Modal>

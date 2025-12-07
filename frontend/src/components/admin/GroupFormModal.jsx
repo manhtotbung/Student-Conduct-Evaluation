@@ -47,11 +47,10 @@ const GroupFormModal = ({ groupToEdit, termCode, onSave, onClose }) => {
       show={show} 
       onHide={handleClose} 
       onExited={handleExited} 
-      backdrop="static" 
       keyboard={false}
     >
       <Modal.Header closeButton>
-        <Modal.Title>{groupToEdit ? 'Sửa Nhóm TC' : 'Thêm Nhóm TC'}</Modal.Title>
+        <Modal.Title>{groupToEdit ? 'Sửa nhóm tiêu chí' : 'Thêm nhóm tiêu chí'}</Modal.Title>
       </Modal.Header>
       
       <Form onSubmit={handleSave}>
@@ -70,7 +69,6 @@ const GroupFormModal = ({ groupToEdit, termCode, onSave, onClose }) => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-danger" onClick={handleClose} disabled={isSaving}>Hủy</Button>
           <Button variant='success' className="btn-main" type="submit" disabled={isSaving}>
             {isSaving ? <><Spinner animation="border" size="sm" className="me-1" /> Đang lưu...</> : 'Lưu'}
           </Button>
