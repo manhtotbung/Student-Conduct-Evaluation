@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Container, Alert, Modal } from 'react-bootstrap'; // Import components từ React-Bootstrap
+import { Container, Alert, Modal} from 'react-bootstrap'; // Import components từ React-Bootstrap
 import { useTerm } from '../../layout/DashboardLayout';
 import useAuth from '../../hooks/useAuth';
 import useNotify from '../../hooks/useNotify';
@@ -20,17 +20,30 @@ const SelfAssessmentPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [isActive, setIsActive] = useState(true);
-
-  //State modal cảnh báo
   const [showWarning, setShowWarning] = useState(false);
+  const [warningLevel, setWarningLevel] = useState('');
+  const [latestTermScore, setLatestTermScore] = useState(null);
 
-  const handleClose = () => setShowWarning(false);
-  const handleShow = () => setShowWarning(true);
+  // Hàm kiểm tra và hiển thị cảnh báo dựa trên điểm kỳ gần nhất
 
-  //Hàm kiểm tra điều kiện cảnh báo
-  const checkWarningCondition = (total_score) => {
-    if (total_score <= 35) {
-      handleShow();
+  const checkWarning = (score) => {
+    const warningKey = `warning_shown_${term}`;
+    const hasShown = sessionStorage.getItem(warningKey);
+
+    if (hasShown) return;
+
+    if (score < 35) {
+      setWarningLevel('danger');
+      setShowWarning(true);
+      sessionStorage.setItem(warningKey, 'true');
+    } else if (score <= 49) {
+      setWarningLevel('warning');
+      setShowWarning(true);
+      sessionStorage.setItem(warningKey, 'true');
+    } else if (score <= 64) {
+      setWarningLevel('info');
+      setShowWarning(true);
+      sessionStorage.setItem(warningKey, 'true');
     }
   };
 
@@ -44,7 +57,8 @@ const SelfAssessmentPage = () => {
     try {
       const dataHistory = await getStudentHistory(user.student_code);
       if (dataHistory && dataHistory.length > 0) {
-        checkWarningCondition(dataHistory[0].total_score);
+        checkWarning(dataHistory[0].total_score);
+        setLatestTermScore(dataHistory[0].term_code);
       }
 
       const [critRes, selfRes, statusRes] = await Promise.all([
@@ -52,7 +66,6 @@ const SelfAssessmentPage = () => {
         getSelfAssessment(user.student_code, term),
         api.get(`/api/terms/${term}/status`)
       ]);
-      console.log('Term Status Response:', statusRes);
       setCriteria(critRes || []);
       setSelfData(selfRes || []);
       setIsActive(statusRes?.isActive !== undefined ? statusRes.isActive : true);
@@ -70,7 +83,7 @@ const SelfAssessmentPage = () => {
   }, [fetchData]);
 
   // Hàm xử lý khi người dùng bấm nút "Gửi đánh giá"
-  const handleSubmit = async (items, total) => {
+  const handleSubmit = async (items) => {
     if (!isActive) {
       notify('Kỳ đánh giá này đã bị khóa.', 'warning');
       return;
@@ -97,27 +110,54 @@ const SelfAssessmentPage = () => {
 
   // Render nội dung chính
   return (
-    // Dùng Container để bao bọc nội dung nếu cần
     <Container fluid>
-      {/* Cảnh báo sv drl yếu kém */}
-      <Modal show={showWarning} onHide={handleClose} centered>
+      <Modal show={showWarning} onHide={() => setShowWarning(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Cảnh báo đánh giá rèn luyện</Modal.Title>
+          <Modal.Title>
+            {warningLevel === 'danger'}
+            {warningLevel === 'warning'}
+            {warningLevel === 'info'}
+            {warningLevel === 'danger' ? 'Cảnh báo nghiêm trọng' :
+              warningLevel === 'warning' ? 'Cảnh báo điểm rèn luyện' :
+                'Nhắc nhở'}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>
-            Điểm đánh giá rèn luyện của bạn trong kỳ trước ≤ 35 điểm. Bạn cần chú ý cải thiện để đạt kết quả tốt hơn.
-          </p>
+          {warningLevel === 'danger' && (
+            <Alert variant="danger" className="mb-3">
+              <strong>{`Điểm rèn luyện ${latestTermScore} < 35 điểm (Xếp loại Kém)`}</strong>
+              <p className="mb-0 mt-2">Sinh viên bị xếp loại rèn luyện kém trong cả năm học thì phải
+                tạm ngừng học một năm học ở năm học tiếp theo và nếu bị xếp loại rèn luyện kém cả năm
+                lần thứ hai thì sẽ bị buộc thôi học. </p>
+            </Alert>
+          )}
+          {warningLevel === 'warning' && (
+            <Alert variant="warning" className="mb-3">
+              <strong>{`Điểm rèn luyện ${latestTermScore} ≤ 49 điểm (Xếp loại Yếu)`}</strong>
+              <p className="mb-0 mt-2">Bạn nên chú ý cải thiện để đạt kết quả tốt hơn.</p>
+            </Alert>
+          )}
+          {warningLevel === 'info' && (
+            <Alert variant="info" className="mb-3">
+              <strong>{`Điểm rèn luyện ${latestTermScore} ≤ 64 điểm (Xếp loại Trung bình)`}</strong>
+              <p className="mb-0 mt-2">Hãy cố gắng thêm để đạt xếp loại cao hơn.</p>
+            </Alert>
+          )}
+          <div className="mt-3">
+            <strong>Gợi ý cải thiện:</strong>
+            <ul className="mt-2 mb-0">
+              <li>Tham gia đầy đủ các hoạt động của lớp, khoa</li>
+              <li>Tích cực tham gia CLB, đội nhóm</li>
+              <li>Hoàn thành tốt các nhiệm vụ được giao</li>
+              <li>Liên hệ cố vấn học tập để được hỗ trợ</li>
+            </ul>
+          </div>
         </Modal.Body>
       </Modal>
 
-
       <div className="section-title mb-3">
-        <i className="bi bi-clipboard2-check me-2"></i>
-        TỰ ĐÁNH GIÁ – Kỳ <span className="fw-bold">{term}</span>
+        <b>TỰ ĐÁNH GIÁ</b>
       </div>
-
-      {/* Thay thế div.alert.alert-warning bằng Alert variant="warning" */}
       {!isActive && (
         <Alert variant="warning">
           <i className="bi bi-lock-fill me-2"></i> Kỳ đánh giá này đã được **khóa**. Bạn không thể chỉnh sửa.

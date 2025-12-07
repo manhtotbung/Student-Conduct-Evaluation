@@ -92,8 +92,7 @@ const AssessmentHistoryPage = () => {
   return (
     <Container fluid>
       <div className='section-title mb-3'>
-        <i className='bi bi-archive-fill me-2'></i>
-        Lịch sử Đánh giá Rèn luyện
+        <b>LỊCH SỬ ĐIỂM RÈN LUYỆN</b>
       </div>
       {renderContent()}
     </Container>

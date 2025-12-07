@@ -91,8 +91,7 @@ const ViewFacultiesPage = () => {
   return (
     <>
       <div className='section-title mb-3'>
-        <i className='bi bi-building me-2'></i>
-        Tổng hợp theo khoa – Kỳ <b>{term}</b>
+        <b>TỔNG HỢP THEO KHOA</b>
       </div>
 
       {renderContent()}

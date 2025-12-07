@@ -56,8 +56,7 @@ const SelfHistoryPage = () => {
       </Link>
 
       <div className="section-title mb-3">
-        <i className="bi bi-clock-history me-2"></i>
-        CHI TIẾT ĐÁNH GIÁ – Kỳ <span className="fw-bold">{termCode}</span>
+        <b>CHI TIẾT ĐIỂM RÈN LUYỆN - {termCode}</b>
       </div>
 
       {/* Tái sử dụng AssessmentForm ở chế độ chỉ đọc */}

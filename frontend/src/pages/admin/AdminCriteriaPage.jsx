@@ -382,8 +382,7 @@ const AdminCriteriaPage = () => {
       {/* Tiêu đề trang và nút Sao chép */}
       <div className="d-flex justify-content-between align-items-center mb-3 ">
         <div className="section-title mb-0">
-          <i className="bi bi-sliders2 me-2"></i>
-          QUẢN TRỊ TIÊU CHÍ – Kỳ <b>{currentTargetTerm}</b>
+          <b>QUẢN LÝ TIÊU CHÍ</b>
         </div>
         <Button
           variant="outline-success"
@@ -391,7 +390,7 @@ const AdminCriteriaPage = () => {
           onClick={() => setShowCopyModal(true)}
           disabled={loading}
         >
-          <i className="bi bi-clipboard-plus me-1"></i> Sao chép từ kỳ trước...
+          <i className="bi bi-clipboard-plus me-1"></i> Sao chép từ kỳ trước
         </Button>
       </div>
 
@@ -693,7 +692,7 @@ const AdminCriteriaPage = () => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Sao chép Tiêu chí</Modal.Title>
+          <Modal.Title>Sao chép tiêu chí</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>Chọn kỳ học nguồn để sao chép toàn bộ tiêu chí và lựa chọn sang kỳ học hiện tại:</p>

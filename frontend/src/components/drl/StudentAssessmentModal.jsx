@@ -85,7 +85,7 @@ const StudentAssessmentModal = ({ studentCode, studentName, term, onClose }) => 
     >
       <Modal.Header closeButton>
         <Modal.Title>
-          Đánh giá: {studentName} ({studentCode}) – Kỳ {term}
+          Đánh giá sinh viên - {studentName} ({studentCode}) – {term}
         </Modal.Title>
       </Modal.Header>
 

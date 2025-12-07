@@ -85,10 +85,10 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
       <Table striped responsive className="align-middle">
           <thead>
             <tr>
-              <th>MSV</th>
-              <th>Họ tên</th>
-              <th className="text-end">Tổng điểm<Form.Label></Form.Label></th>
-              <th></th>
+              <th style={{borderBottom: "none"}}>MSV</th>
+              <th style={{borderBottom: "none"}}>Họ tên</th>
+              <th className="text-end" style={{borderBottom: "none"}}>Tổng điểm<Form.Label></Form.Label></th>
+              <th style={{borderBottom: "none"}}></th>
             </tr>
             <tr>
               <th><Form.Control name="msv" value={formData.msv} onChange={(e) => setFormData({...formData, msv: e.target.value})} size='sm'></Form.Control></th>
