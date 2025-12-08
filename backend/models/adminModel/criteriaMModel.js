@@ -1,5 +1,5 @@
 import pool from "../../db.js";
-import { getConfig, toNum, parseGroupId, withTransaction } from "../../utils/helpers.js";
+import { toNum, withTransaction } from "../../utils/helpers.js";
 
 // Error codes
 export const CRITERION_ERRORS = {
@@ -69,62 +69,28 @@ export const validateCriterionOptions = (options, max_points) => {
 };
 
 
-// Giải quyết group_id từ groupCode (ID hoặc code) hoặc tự động tạo
+// Tìm hoặc tạo group_id từ groupCode
 const resolveGroupId = async (groupCode, criterionData) => {
-  const { HAS_GROUP_ID, GROUP_TBL } = getConfig();
-  if (!HAS_GROUP_ID) return null;
+  if (!groupCode || !criterionData.term_code) return null;
 
-  // Trường hợp 1: groupCode là số (ID) → Validate tồn tại
-  if (groupCode && !isNaN(Number(groupCode))) {
-    try {
-      const { rows } = await pool.query(
-        `SELECT id FROM ${GROUP_TBL} WHERE id = $1`,
-        [Number(groupCode)]
-      );
-      if (rows.length > 0) return rows[0].id;
-      // ID không tồn tại → tiếp tục các trường hợp khác
-      console.warn(`[resolveGroupId] Group ID ${groupCode} not found, trying other strategies`);
-    } catch (error) {
-      console.error('[resolveGroupId] Validate ID error:', error.message);
-    }
+  // Nếu groupCode là số (ID) → Validate tồn tại
+  if (!isNaN(Number(groupCode))) {
+    const { rows } = await pool.query(
+      `SELECT id FROM drl.criteria_group WHERE id = $1`,
+      [Number(groupCode)]
+    );
+    if (rows.length > 0) return rows[0].id;
   }
   
-  // Trường hợp 2: groupCode là string (code) → Tìm hoặc tạo theo code
-  if (groupCode && typeof groupCode === 'string' && criterionData.term_code) {
-    try {
-      const { rows } = await pool.query(
-        `INSERT INTO ${GROUP_TBL} (term_code, code, title)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (term_code, code) DO UPDATE SET code = EXCLUDED.code
-         RETURNING id`,
-        [criterionData.term_code, groupCode, `Nhóm ${groupCode}`]
-      );
-      if (rows[0]) return rows[0].id;
-    } catch (error) {
-      console.error('[resolveGroupId] Create/find by code error:', error.message);
-    }
-  }
-
-  // Trường hợp 3: Không có groupCode → Parse từ mã tiêu chí
-  const groupNumber = parseGroupId(criterionData.code);
-  if (groupNumber && criterionData.term_code) {
-    try {
-      const { rows } = await pool.query(
-        `INSERT INTO ${GROUP_TBL} (term_code, code, title)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (term_code, code) DO UPDATE SET code = EXCLUDED.code
-         RETURNING id`,
-        [criterionData.term_code, String(groupNumber), `Nhóm ${groupNumber}`]
-      );
-      if (rows[0]) return rows[0].id;
-    } catch (error) {
-      console.error('[resolveGroupId] Auto-create from criterion code error:', error.message);
-    }
-  }
-
-  // Không tìm/tạo được → return null (controller sẽ throw error nếu required)
-  console.warn('[resolveGroupId] Cannot determine group_id for criterion:', criterionData.code);
-  return null;
+  // Nếu groupCode là string (code) → Tìm hoặc tạo
+  const { rows } = await pool.query(
+    `INSERT INTO drl.criteria_group (term_code, code, title)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (term_code, code) DO UPDATE SET code = EXCLUDED.code
+     RETURNING id`,
+    [criterionData.term_code, String(groupCode), `Nhóm ${groupCode}`]
+  );
+  return rows[0]?.id || null;
 };
 
 /**
@@ -180,14 +146,9 @@ export const deleteCriterionCascade = async (id) => {
   });
 };
 
-//Tạo mới tiêu chí với group handling
+// Tạo mới tiêu chí
 export const createCriterion = async (criterionData, groupCode) => {
-  const { HAS_GROUP_ID, GROUP_ID_REQUIRED } = getConfig();
-  
   const group_id = await resolveGroupId(groupCode, criterionData);
-  if (GROUP_ID_REQUIRED && !group_id) {
-    throw new Error(CRITERION_ERRORS.CANNOT_DETERMINE_GROUP);
-  }
 
   const { rows } = await pool.query(
     `INSERT INTO drl.criterion(term_code, code, title, type, max_points, group_id)
@@ -199,16 +160,14 @@ export const createCriterion = async (criterionData, groupCode) => {
       criterionData.title,
       criterionData.type,
       toNum(criterionData.max_points) || 0,
-      HAS_GROUP_ID ? group_id : null
+      group_id
     ]
   );
   return rows[0];
 };
 
-//Cập nhật tiêu chí
+// Cập nhật tiêu chí
 export const updateCriterion = async (id, criterionData, groupCode = null) => {
-  const { HAS_GROUP_ID, GROUP_ID_REQUIRED } = getConfig();
-  
   const existing = await getCriterionForUpdate(id);
   if (!existing) throw new Error(CRITERION_ERRORS.NOT_FOUND);
 
@@ -232,29 +191,22 @@ export const updateCriterion = async (id, criterionData, groupCode = null) => {
       term_code: criterionData.term_code || existing.term_code,
       code: criterionData.code
     });
-    if (GROUP_ID_REQUIRED && !group_id) {
-      throw new Error(CRITERION_ERRORS.CANNOT_DETERMINE_GROUP);
-    }
   }
-
-  const params = [
-    criterionData.code,
-    criterionData.title,
-    criterionData.type,
-    toNum(criterionData.max_points) || 0,
-    criterionData.require_hsv_verify
-  ];
-  let setClauses = "code=$1, title=$2, type=$3, max_points=$4, require_hsv_verify=$5";
-
-  if (HAS_GROUP_ID) {
-    setClauses += `, group_id=$${params.length + 1}`;
-    params.push(group_id);
-  }
-  params.push(id);
 
   const { rows } = await pool.query(
-    `UPDATE drl.criterion SET ${setClauses} WHERE id = $${params.length} RETURNING *`,
-    params
+    `UPDATE drl.criterion 
+     SET code=$1, title=$2, type=$3, max_points=$4, require_hsv_verify=$5, group_id=$6 
+     WHERE id = $7 
+     RETURNING *`,
+    [
+      criterionData.code,
+      criterionData.title,
+      criterionData.type,
+      toNum(criterionData.max_points) || 0,
+      criterionData.require_hsv_verify,
+      group_id,
+      id
+    ]
   );
   return rows[0] || null;
 };

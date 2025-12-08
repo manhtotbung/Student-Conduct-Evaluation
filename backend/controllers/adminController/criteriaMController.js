@@ -1,4 +1,4 @@
-import { toNum, parseGroupId } from "../../utils/helpers.js";
+import { toNum } from "../../utils/helpers.js";
 import {
   deleteCriterionCascade,
   createCriterion as createCriterionModel,
@@ -9,8 +9,6 @@ import {
   checkdeleteAllCriteria,
   deleteAllCriteria,
 } from "../../models/adminModel/criteriaMModel.js";
-
-// --- Criteria Controllers (CRUD Criteria & Options) ---
 
 // Tạo mới tiêu chí
 export const createCriterion = async (req, res, next) => {
@@ -201,7 +199,7 @@ export const deleteCriterion = async (req, res, next) => {
 
     res.status(200).json({ ok: true, message: "Xóa tiêu chí thành công" });
   } catch (err) {
-    console.error("Admin Delete Criterion Error:", err);
+    console.error("lỗi ở Admin Delete Criterion:", err);
 
     // Xử lý các lỗi cụ thể
     if (err.message === "Không tìm thấy tiêu chí!") {
