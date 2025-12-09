@@ -10,35 +10,23 @@ const queryCriterion = async (id, fields = '*') => {
 };
 
 // Tìm hoặc tạo group_id từ groupCode
-const resolveGroupId = async (groupCode, criterionData) => {
-  if (!groupCode || !criterionData.term_code) return null;
+const resolveGroupId = async (groupCode, term_code) => {
+  if (!groupCode || !term_code) return null;
 
-  // Nếu groupCode là số (ID) → Validate tồn tại
-  if (!isNaN(Number(groupCode))) {
-    const { rows } = await pool.query(
-      `SELECT id FROM drl.criteria_group WHERE id = $1`,
-      [Number(groupCode)]
-    );
-    if (rows.length > 0) return rows[0].id;
-  }
-  
-  // Nếu groupCode là string (code) → Tìm hoặc tạo
+  // Luôn xử lý groupCode như string, tìm hoặc tạo group theo code
   const { rows } = await pool.query(
     `INSERT INTO drl.criteria_group (term_code, code, title)
      VALUES ($1, $2, $3)
      ON CONFLICT (term_code, code) DO UPDATE SET code = EXCLUDED.code
      RETURNING id`,
-    [criterionData.term_code, String(groupCode), `Nhóm ${groupCode}`]
+    [term_code, String(groupCode), `Nhóm ${groupCode}`]
   );
   return rows[0]?.id || null;
 };
 
-
-
 // Tạo mới tiêu chí
-// models/adminModel/criteriaMModel.js
 export const createCriterion = async (term_code, code, title, type, max_points, group_code) => {
-  const group_id = await resolveGroupId(group_code, { term_code });
+  const group_id = await resolveGroupId(group_code, term_code);
   
   const { rows } = await pool.query(
     `INSERT INTO drl.criterion(term_code, code, title, type, max_points, group_id)
@@ -64,7 +52,7 @@ export const updateCriterion = async (id, term_code, code, title, type, max_poin
     }
   }
 
-  const group_id = await resolveGroupId(group_code, { term_code: term_code || existing.term_code });
+  const group_id = await resolveGroupId(group_code, term_code || existing.term_code);
 
   const { rows } = await pool.query(
     `UPDATE drl.criterion 
@@ -93,11 +81,7 @@ export const updateCriterionOptions = async (criterion_id, options) => {
     if (!criterion) throw new Error("Không tìm thấy tiêu chí");
     if (criterion.type !== "radio") throw new Error("Tiêu chí không phải là radio");
 
-    await client.query(
-      `UPDATE drl.self_assessment SET option_id = NULL 
-       WHERE criterion_id = $1 AND option_id IS NOT NULL`,
-      [criterion_id]
-    );
+    // Xóa options cũ (CASCADE tự động set option_id = NULL trong self_assessment)
     await client.query(
       `DELETE FROM drl.criterion_option WHERE criterion_id = $1`, 
       [criterion_id]
@@ -106,27 +90,33 @@ export const updateCriterionOptions = async (criterion_id, options) => {
     // Insert new options
     if (!options || options.length === 0) return { ok: true, options: [] };
     
+    // Lọc options hợp lệ (có label)
     const validOptions = options
       .map(opt => ({
         label: (opt.label || "").trim(),
         score: toNum(opt.score) || 0
       }))
-      .filter(opt => opt.label);
+      .filter(opt => opt.label); //only giữ label ko rỗng
 
     if (validOptions.length === 0) return { ok: true, options: [] };
 
-    const values = validOptions.map((_, i) => 
-      `($1, $${i*2+2}, $${i*2+3})`
-    ).join(', ');
+    // Tạo VALUES string và params array cho batch insert
+    const values = [];
+    const params = [criterion_id]; // $1 = criterion_id (dùng chung cho tất cả)
     
-    const params = [
-      criterion_id,
-      ...validOptions.flatMap(opt => [opt.label, opt.score])
-    ];
+    validOptions.forEach((opt, index) => {
+      const labelParam = index * 2 + 2;  // $2, $4, $6, ...
+      const scoreParam = index * 2 + 3;  // $3, $5, $7, ...
+      
+      values.push(`($1, $${labelParam}, $${scoreParam})`);
+      //$1 là criterion_id, $ còn lại là vị trí của label và score vì option là mảng
+      params.push(opt.label, opt.score);
+    });
 
+    // INSERT tất cả options trong 1 query
     const { rows } = await client.query(
       `INSERT INTO drl.criterion_option (criterion_id, label, score) 
-       VALUES ${values} RETURNING *`,
+       VALUES ${values.join(', ')} RETURNING *`,
       params
     );
 
@@ -158,34 +148,34 @@ export const checkCopyCriteria = async (targetTermCode) => {
 };
 // Sao chep tieu chi
 export const copyCriteria = async (sourceTermCode, targetTermCode) => {
-  //Sao chép criteria_Group
-  await pool.query(`insert into drl.criteria_group (term_code, code, title)
-    select $1, code, title
-    from drl.criteria_group where term_code=$2`,[targetTermCode, sourceTermCode]);
+  return withTransaction(async (client) => {
+     //Sao chép criteria_Group
+      await client.query(`insert into drl.criteria_group (term_code, code, title)
+        select $1, code, title
+        from drl.criteria_group where term_code=$2`,[targetTermCode, sourceTermCode]);
 
-  // Sao chép criterion
-  const targetGroups = await pool.query(`select id, title from drl.criteria_group where term_code = $1`,[targetTermCode]);
-  
-  for (let i = 0;i < targetGroups.rows.length;i++) {
-    const group = targetGroups.rows[i];
-    const sourceGroup = await pool.query(`select id from drl.criteria_group where term_code = $1 AND title = $2`,[sourceTermCode, group.title]);
+      // Sao chép criterion
+      const targetGroups = await client.query(`select id, title from drl.criteria_group where term_code = $1`,[targetTermCode]);
+      
+      for (let i = 0;i < targetGroups.rows.length;i++) {
+        const group = targetGroups.rows[i];
+        const sourceGroup = await client.query(`select id from drl.criteria_group where term_code = $1 AND title = $2`,[sourceTermCode, group.title]);
+        await client.query(`insert into drl.criterion (term_code, group_id, code, title, type, max_points, require_hsv_verify)
+          select $1, $2, code, title, type, max_points, require_hsv_verify
+          from drl.criterion where group_id = $3`,[targetTermCode, group.id, sourceGroup.rows[0].id]); 
+      };
 
-    await pool.query(`insert into drl.criterion (term_code, group_id, code, title, type, max_points, require_hsv_verify)
-      select $1, $2, code, title, type, max_points, require_hsv_verify
-      from drl.criterion where group_id = $3`,[targetTermCode, group.id, sourceGroup.rows[0].id]); 
-  };
+      // Sao chép criterion_option  
+      const targetCriteria = await client.query(`select id, title from drl.criterion where term_code = $1`,[targetTermCode] );
 
-  // Sao chép criterion_option  
-  const targetCriteria = await pool.query(`select id, title from drl.criterion where term_code = $1`,[targetTermCode] );
-
-  for (let i = 0;i< targetCriteria.rows.length;i++) {
-    const criterion = targetCriteria.rows[i];
-    const sourceCri = await pool.query(`select id from drl.criterion where term_code = $1 and title = $2`,[sourceTermCode, criterion.title]);
-
-    await pool.query(`insert into drl.criterion_option (criterion_id, label, score)
-      select $1, label, score
-      from drl.criterion_option
-      where criterion_id = $2`,[criterion.id, sourceCri.rows[0].id]);
-  }
-  return true;
+      for (let i = 0;i< targetCriteria.rows.length;i++) {
+        const criterion = targetCriteria.rows[i];
+        const sourceCri = await client.query(`select id from drl.criterion where term_code = $1 and title = $2`,[sourceTermCode, criterion.title]);
+        await client.query(`insert into drl.criterion_option (criterion_id, label, score)
+          select $1, label, score
+          from drl.criterion_option
+          where criterion_id = $2`,[criterion.id, sourceCri.rows[0].id]);
+      }
+      return true;
+  });
 };

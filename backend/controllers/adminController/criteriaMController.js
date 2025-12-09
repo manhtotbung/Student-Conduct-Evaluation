@@ -120,7 +120,6 @@ export const updateCriterionOptions = async (req, res, next) => {
     if (err.message === "Không tìm thấy tiêu chí" || err.message === "Tiêu chí không phải là radio") {
       return res.status(400).json({ error: err.message });
     }
-
     next(err);
   }
 };
