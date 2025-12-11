@@ -1,5 +1,5 @@
 import express from "express";
-import *as termController from '../controllers/termController.js';
+import * as termController from '../controllers/termController.js';
 const router = express.Router();
 
 // GET /api/terms - Lấy danh sách tất cả học kỳ (cho dropdown)

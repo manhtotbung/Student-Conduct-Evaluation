@@ -9,5 +9,5 @@ export const getTerm = async ()=> {
 
 export const getTerm_Status = async (termCode) => {
     const {rows} = await pool.query(`SELECT is_active FROM ref.term WHERE code = $1`, [termCode]);
-    return rows;
+    return rows[0];
 };
