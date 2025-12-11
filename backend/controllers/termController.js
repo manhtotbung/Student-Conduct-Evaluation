@@ -21,7 +21,7 @@ export const getTermStatus = async (req, res) => {
 
     res.json({ isActive: term.is_active });
   } catch (error) {
-    console.error("Lỗi ở getTerm_Status", errorr);
+    console.error("Lỗi ở getTerm_Status", error);
     res.status(500).json({ isActive: false });
   }
 };
