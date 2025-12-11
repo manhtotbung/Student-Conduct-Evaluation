@@ -3,7 +3,7 @@ import * as facultyClassController from '../controllers/adminController/faculty_
 import * as groupController from '../controllers/adminController/groupMController.js';
 import * as criteriaController from '../controllers/adminController/criteriaMController.js';
 import * as semesterController from '../controllers/adminController/semesterMController.js';
-import * as searchController from '../controllers/adminController/seatchMController.js';
+import * as searchController from '../controllers/adminController/searchMController.js';
 
 const router = express.Router();
 

@@ -37,7 +37,7 @@ import termRoutes from "./routes/term.js";
 import { protectedRoute, requireRole } from "./middlewares/authMiddleware.js";
 
 
-app.get("/", (_req, res) => res.send("DRL API is running.")); // Health check cơ bản
+app.get("/", (_req, res) => res.send("DRL API is running.")); // Kiểm tra sức khỏe cơ bản
 app.use("/api/auth", authRoutes);
 app.use("/api/terms", termRoutes);
 app.use("/api/drl", protectedRoute, requireRole('student', 'teacher', 'admin', 'faculty', 'hsv') , drlRoutes);
@@ -47,7 +47,7 @@ app.use("/api/admin", protectedRoute, requireRole('admin'),adminRoutes);
 app.use("/api/hsv", protectedRoute, requireRole('hsv') ,hsvRoutes);
 
 
-// Thêm route lấy health chi tiết hơn (bao gồm trạng thái DB)
+// Thêm route kiểm tra db
 app.get("/api/health", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -59,44 +59,43 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
-// =============== Error Handling ===============
-// 404 Handler
+// Xử lý lỗi
+// Xử lý lỗi 404
 app.use((_req, res) => res.status(404).json({ error: "not_found" }));
 
-// Global Error Handler
-// eslint-disable-next-line no-unused-vars
+// Xử lý lỗi toàn cục
 app.use((err, _req, res, _next) => {
-  console.error("❌ UNCAUGHT ERROR:", err.stack || err);
+  console.error("LỖI CHƯA XỬ LÝ:", err.stack || err);
   res.status(err.status || 500).json({
-    error: err.message || "internal_server_error",
-    // Thêm stack trace nếu ở môi trường dev (tùy chọn)
+    error: err.message || "Bad request",
+    // Thêm stack trace nếu ở môi trường phát triển
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
 
-// =============== Start Server ===============
+//Khởi động server
 const server = app.listen(PORT, () => {
-  console.log(`🚀 DRL API running at http://localhost:${PORT}`);
-  console.log(`🔑 Allowing requests from: ${ORIGIN}`);
+  console.log(`DRL API running at http://localhost:${PORT}`);
+  console.log(`Allowing requests from: ${ORIGIN}`);
 });
 
-// =============== Graceful Shutdown ===============
+//Tắt server an toàn
 process.on("SIGINT", async () => {
-  console.log("\n🔌 Shutting down server...");
+  console.log("\nShutting down server...");
   server.close(async () => {
-    console.log("🚪 Server closed.");
+    console.log("Server closed.");
     await pool.end();
-    console.log("💧 Database pool closed.");
+    console.log("Database pool closed.");
     process.exit(0);
   });
 });
 
 process.on("SIGTERM", async () => {
-  console.log("\n🔌 SIGTERM received, shutting down gracefully...");
+  console.log("\nSIGTERM received, shutting down gracefully...");
   server.close(async () => {
-    console.log("🚪 Server closed.");
+    console.log("Server closed.");
     await pool.end();
-    console.log("💧 Database pool closed.");
+    console.log("Database pool closed.");
     process.exit(0);
   });
 });
