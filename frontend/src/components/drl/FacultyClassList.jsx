@@ -1,12 +1,11 @@
 // frontend/src/components/drl/FacultyClassList.jsx
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, Table, Alert, Button, Modal, Form } from 'react-bootstrap'; // Import components
+import { Card, Table, Alert, Button, Modal, Form} from 'react-bootstrap'; // Import components
 import { useTerm } from '../../layout/DashboardLayout';
 import useAuth from '../../hooks/useAuth';
 import { getAdminClasses, getFacultyClasses } from '../../services/drlService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ClassStudentList from './ClassStudentList';
-import HSVStudentList from './HSVStudentList';
 import axios from 'axios';
 const FacultyClassList = ({ facultyCode, setFaculty }) => {
   const { term } = useTerm();
@@ -142,7 +141,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
     <>
       {/* Dùng Card thay cho div.card */}
       <Card>
-        
+
         <Card.Body>
           {loading ? (
             <LoadingSpinner />
@@ -157,14 +156,22 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
             <Table striped responsive className="align-middle">
               <thead>
                 <tr>
-                  <th style={{borderBottom: "none"}}>Mã lớp</th>
-                  <th className="text-end" style={{borderBottom: "none"}}>Sĩ số</th>
-                  <th className="text-end" style={{borderBottom: "none"}}>ĐRL TB</th>
-                  <th style={{borderBottom: "none"}}></th>
+                  <th style={{ borderBottom: "none" }}>MSV</th>
+                  <th style={{ borderBottom: "none" }}>Họ Tên</th>
+                  <th style={{ borderBottom: "none" }}>Lớp</th>
+                  <th className="text-end" style={{ borderBottom: "none", whiteSpace: "nowrap" }}>Tổng điểm (gv)</th>
+                  <th className="text-end" style={{ borderBottom: "none", whiteSpace: "nowrap" }}>Tổng điểm (khoa)</th>
+                  <th style={{ borderBottom: "none" }}>Ghi chú</th>
+                  <th style={{ borderBottom: "none" }}></th>
+                  <th style={{ borderBottom: "none" }}></th>
                 </tr>
                 <tr>
+                  <th><Form.Control name="classCode" onChange={(e) => setClassCode(e.target.value)} size='sm' style={{width:"auto"}}></Form.Control></th>
                   <th><Form.Control name="classCode" onChange={(e) => setClassCode(e.target.value)} size='sm'></Form.Control></th>
-                  <th style={{alignContent:'center'}}><i className="fa-solid fa-magnifying-glass"></i></th>
+                  <th><Form.Control name="classCode" onChange={(e) => setClassCode(e.target.value)} size='sm'></Form.Control></th>
+                  <th></th>
+                  <th></th>
+                  <th></th>
                   <th></th>
                   <th></th>
                 </tr>
@@ -177,6 +184,10 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                     <td className="text-end">
                       {c.avg_score == null ? '—' : Number(c.avg_score).toFixed(2)}
                     </td>
+
+                    <td></td>
+                    <td></td>
+                    <td><Form.Control as="textarea" style={{height:"1px"}} placeholder="Ghi chú.." /></td>
                     <td className="text-end">
                       {/* Dùng Button variant="outline-primary" size="sm" */}
                       <Button
@@ -186,6 +197,17 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                         onClick={() => handleOpenClassModal(c.class_code)}
                       >
                         Xem sinh viên
+                      </Button>
+                    </td>
+                    <td className="text-end">
+                      {/* Dùng Button variant="outline-primary" size="sm" */}
+                      <Button
+                        size="sm"
+                        variant='success'
+                        className="btn-main"
+                        onClick={() => handleOpenClassModal(c.class_code)}
+                      >
+                        Duyệt
                       </Button>
                     </td>
                   </tr>
@@ -221,13 +243,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
         <Modal.Body>
           {selectedClass && (
             <div className="mt-3">
-              {user?.role === 'hsv' ? (
-                <HSVStudentList
-                  classCode={selectedClass}
-                  term={term} />
-              ) : (
-                <ClassStudentList classCode={selectedClass} term={term} />
-              )}
+              <ClassStudentList classCode={selectedClass} term={term} />
             </div>
           )}
         </Modal.Body>

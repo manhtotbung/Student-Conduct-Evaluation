@@ -124,8 +124,7 @@ const AdminCriteriaPage = () => {
 
     setCurrentCriterion({
       ...JSON.parse(JSON.stringify(crit)),
-      group_code: group_code,
-      require_hsv_verify: crit.require_hsv_verify || false
+      group_code: group_code
     });
     setTouchedFields({}); // Reset touched state
   };
@@ -191,7 +190,6 @@ const AdminCriteriaPage = () => {
       ...newCriterionTemplate,
       group_code: gcode,
       term_code: currentTargetTerm,
-      require_hsv_verify: false,
       options: [{ id: null, label: '', score: 0 }]
     });
     setTouchedFields({}); // Reset touched state for new criterion
@@ -566,17 +564,6 @@ const AdminCriteriaPage = () => {
                         <Form.Control.Feedback type="invalid">
                           {getMaxPointsError(currentCriterion.max_points)}
                         </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-                    <Col xs={12}>
-                      <Form.Group>
-                        <Form.Check
-                          className='customCheck'
-                          style={{ boxShadow: "none" }}
-                          checked={currentCriterion.require_hsv_verify || false}
-                          onChange={(e) => setCurrentCriterion(prev => ({ ...prev, require_hsv_verify: e.target.checked }))}
-                          label="Tiêu chí cần hội sinh viên xác nhận"
-                        />
                       </Form.Group>
                     </Col>
                   </Row>

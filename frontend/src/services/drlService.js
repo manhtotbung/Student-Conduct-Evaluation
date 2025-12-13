@@ -49,34 +49,6 @@ export const getFacultyClassStudents = (username, class_code, term) => {
   );
 };
 
-// --- HSV APIs ---
-export const getHSVClasses = (username, term) => {
-  return api.get(`/api/hsv/classes?username=${encodeURIComponent(username)}&term=${encodeURIComponent(term)}`);
-};
-
-export const getHSVClassStudents = (class_code, term) => {
-  return api.get(`/api/hsv/class-students?class_code=${encodeURIComponent(class_code)}&term=${encodeURIComponent(term)}`);
-};
-
-export const confirmHSVAssessment = (student_code, term_code,criterion_code , participated, note, username) => {
-  return api.post('/api/hsv/confirm', {
-    student_code,
-    term_code,
-    criterion_code,
-    participated,
-    note,
-    username
-  });
-};
-
-export const unconfirmHSVAssessment = (student_code, term_code, criterion_code) => {
-  return api.post('/api/hsv/unconfirm', {
-    student_code,
-    term_code,
-    criterion_code
-  });
-};
-
 // --- ADMIN VIEW APIs ---
 export const getAdminFaculties = (term) => {
   return api.get(`/api/admin/faculties?term=${encodeURIComponent(term)}`);

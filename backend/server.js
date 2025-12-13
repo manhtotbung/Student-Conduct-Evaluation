@@ -32,7 +32,6 @@ import drlRoutes from "./routes/drl.js";
 import teacherRoutes from "./routes/teacher.js";
 import facultyRoutes from "./routes/faculty.js";
 import adminRoutes from "./routes/admin.js";
-import hsvRoutes from "./routes/hsv.js";
 import termRoutes from "./routes/term.js";
 import { protectedRoute, requireRole } from "./middlewares/authMiddleware.js";
 
@@ -40,11 +39,10 @@ import { protectedRoute, requireRole } from "./middlewares/authMiddleware.js";
 app.get("/", (_req, res) => res.send("DRL API is running.")); // Kiểm tra sức khỏe cơ bản
 app.use("/api/auth", authRoutes);
 app.use("/api/terms", termRoutes);
-app.use("/api/drl", protectedRoute, requireRole('student', 'teacher', 'admin', 'faculty', 'hsv') , drlRoutes);
+app.use("/api/drl", protectedRoute, requireRole('student', 'teacher', 'admin', 'faculty') , drlRoutes);
 app.use("/api/teacher",protectedRoute, requireRole('teacher'),teacherRoutes);
 app.use("/api/faculty",protectedRoute, requireRole('faculty') ,facultyRoutes);
 app.use("/api/admin", protectedRoute, requireRole('admin'),adminRoutes);
-app.use("/api/hsv", protectedRoute, requireRole('hsv') ,hsvRoutes);
 
 
 // Thêm route kiểm tra db

@@ -46,7 +46,7 @@ export const createCriterion = async (req, res, next) => {
 // Update theo ID
 export const updateCriterion = async (req, res, next) => {
   const { id } = req.params;
-  const { term_code, code, title, type, max_points, group_code, require_hsv_verify } = req.body || {};
+  const { term_code, code, title, type, max_points, group_code } = req.body || {};
 
   // Validation đầu vào
   if (!code || !title) {
@@ -61,7 +61,6 @@ export const updateCriterion = async (req, res, next) => {
       title.trim(),
       type,
       max_points,
-      require_hsv_verify,
       group_code
     );
 
@@ -71,9 +70,6 @@ export const updateCriterion = async (req, res, next) => {
 
     if (err.message === "Không tìm thấy tiêu chí") {
       return res.status(404).json({ error: err.message });
-    }
-    if (err.message?.includes("xác nhận HSV")) {
-      return res.status(400).json({ error: err.message });
     }
     if (err.code === "23505") {
       return res.status(409).json({ error: "Mã tiêu chí đã tồn tại" });
