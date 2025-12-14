@@ -2,88 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Form, Button, InputGroup, Spinner, Alert } from 'react-bootstrap';
 
 const CriterionRow = ({ c, saved, onChange, readOnly }) => {
-  const requiresHSV = c.require_hsv_verify === true;
-  const isVerified = requiresHSV && saved.is_hsv_verified === true;
-
-  if (requiresHSV) {
-    if (isVerified) {
-      const note = saved.hsv_note || '';
-      return (
-        <>
-          <Alert variant="success" className="mb-2 py-2 small">
-            <i className="bi bi-shield-check me-1"></i>
-            <strong>Đã được HSV xác nhận</strong>
-          </Alert>
-          <InputGroup size="sm">
-            <InputGroup.Text>Kết quả</InputGroup.Text>
-            <Form.Control
-              value={`${(saved.self_score || 0) > 0 ? 'Có tham gia' : 'Không tham gia'} - ${saved.self_score || 0} điểm`}
-              disabled
-            />
-          </InputGroup>
-          {note && (
-            <InputGroup size="sm" className="mt-1">
-              <InputGroup.Text>Ghi chú HSV</InputGroup.Text>
-              <Form.Control value={note} disabled />
-            </InputGroup>
-          )}
-        </>
-      );
-    }
-
-    else {
-      return (
-        <>
-          <Alert variant="warning" className="mb-2 py-2 small">
-            <i className="bi bi-shield-exclamation me-1"></i>
-            Tiêu chí này cần <strong>HSV xác nhận</strong>. Điểm hiện tại = 0 (chờ xác nhận).
-          </Alert>
-
-          {c.type === 'radio' && (
-            <div>
-              {(c.options || []).map((opt, j) => (
-                <Form.Check
-                  type="radio"
-                  key={opt.id}
-                  name={`q${c.id}`}
-                  id={`q${c.id}_${j}`}
-                  label={
-                    <span className="d-flex align-items-center">
-                      <span className='ms-2'>{opt.label}</span>
-                      <span className="text-muted ms-2 " style={{ fontSize: "small", fontStyle: "italic" }}>
-                        ({opt.score} điểm)
-                      </span>
-                    </span>
-                  }
-                  value={opt.id}
-                  checked={Number(saved.option_id) === Number(opt.id)}
-                  disabled={readOnly}
-                  onChange={() => onChange(c.id, { option_id: opt.id, self_score: 0, text_value: null })}
-                />
-              ))}
-            </div>
-          )}
-
-          {c.type === 'text' && (
-            <Form.Control
-              as="textarea"
-              rows={2}
-              size="sm"
-              placeholder="VD: Tham gia CLB Lập Trình, vai trò Thành viên..."
-              value={saved.text_value || ''}
-              disabled={readOnly}
-              onChange={(e) => onChange(c.id, { text_value: e.target.value, self_score: 0, option_id: null })}
-            />
-          )}
-
-          <div className="text-muted small mt-1">
-            Điểm: <strong>0</strong> / {c.max_points} (Chờ HSV xác nhận)
-          </div>
-        </>
-      );
-    }
-  }
-
   // Xử lý tiêu chí loại 'radio'
   if (c.type === 'radio') {
     return (c.options || []).map((opt, j) => (
@@ -149,14 +67,6 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
   }, [formState]);
 
   const handleChange = (criterion_id, data) => {
-    // ✅ FIX: Tìm tiêu chí và kiểm tra require_hsv_verify
-    const c = criteria.find(cr => cr.id === criterion_id);
-
-    // Nếu tiêu chí cần HSV xác nhận và chưa được xác nhận → Force điểm = 0
-    if (c?.require_hsv_verify && !formState[criterion_id]?.is_hsv_verified) {
-      data.self_score = 0;
-    }
-
     setFormState(prev => ({
       ...prev,
       [criterion_id]: { ...(prev[criterion_id] || {}), criterion_id: criterion_id, ...data }
@@ -250,7 +160,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
             {isSaving ? (
               <><Spinner animation="border" size="sm" className="me-1" /> Đang lưu...</> // Dùng Spinner component
             ) : (
-              <><i className="bi bi-send-check me-1"></i> Gửi đánh giá</>
+              <><i className="bi bi-send-check me-1"></i> Lưu đánh giá</>
             )}
           </Button>
         )}

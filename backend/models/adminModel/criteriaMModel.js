@@ -38,28 +38,18 @@ export const createCriterion = async (term_code, code, title, type, max_points, 
 };
 
 // Cập nhật tiêu chí
-export const updateCriterion = async (id, term_code, code, title, type, max_points, require_hsv_verify, group_code) => {
-  const existing = await queryCriterion(id, 'term_code, require_hsv_verify');
+export const updateCriterion = async (id, term_code, code, title, type, max_points, group_code) => {
+  const existing = await queryCriterion(id, 'term_code');
   if (!existing) throw new Error("Không tìm thấy tiêu chí");
-
-  if (require_hsv_verify !== undefined && existing.require_hsv_verify !== require_hsv_verify) {
-    const { rows } = await pool.query(
-      `SELECT EXISTS(SELECT 1 FROM drl.self_assessment WHERE criterion_id = $1)`,
-      [id]
-    );
-    if (rows[0].exists) {
-      throw new Error("Không thể thay đổi yêu cầu xác nhận HSV vì đã có sinh viên đánh giá");
-    }
-  }
 
   const group_id = await resolveGroupId(group_code, term_code || existing.term_code);
 
   const { rows } = await pool.query(
     `UPDATE drl.criterion 
-     SET code=$1, title=$2, type=$3, max_points=$4, require_hsv_verify=$5, group_id=$6 
-     WHERE id = $7 
+     SET code=$1, title=$2, type=$3, max_points=$4, group_id=$5 
+     WHERE id = $6 
      RETURNING *`,
-    [code, title, type, max_points || 0, require_hsv_verify, group_id, id]
+    [code, title, type, max_points || 0, group_id, id]
   );
   return rows[0] || null;
 };
@@ -160,8 +150,8 @@ export const copyCriteria = async (sourceTermCode, targetTermCode) => {
       for (let i = 0;i < targetGroups.rows.length;i++) {
         const group = targetGroups.rows[i];
         const sourceGroup = await client.query(`select id from drl.criteria_group where term_code = $1 AND title = $2`,[sourceTermCode, group.title]);
-        await client.query(`insert into drl.criterion (term_code, group_id, code, title, type, max_points, require_hsv_verify)
-          select $1, $2, code, title, type, max_points, require_hsv_verify
+        await client.query(`insert into drl.criterion (term_code, group_id, code, title, type, max_points)
+          select $1, $2, code, title, type, max_points
           from drl.criterion where group_id = $3`,[targetTermCode, group.id, sourceGroup.rows[0].id]); 
       };
 

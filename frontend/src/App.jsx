@@ -11,8 +11,6 @@ import SelfHistoryPage from './pages/student/SelfHistoryPage';
 import ViewStudentsPage from './pages/teacher/ViewStudentsPage';
 // Faculty Pages
 import ViewClassesPage from './pages/faculty/ViewClassesPage';
-// HSV Pages
-import ViewHSVClassesPage from './pages/hsv/ViewHSVClassesPage';
 // Admin Pages
 import ViewFacultiesPage from './pages/admin/ViewFacultiesPage';
 import ViewAllClassesPage from './pages/admin/ViewAllClassesPage';
@@ -38,9 +36,6 @@ function AppRoutes() {
       case 'student': return '/self-assessment';
       case 'teacher': return '/teacher/students';
       case 'faculty': return '/faculty/classes';
-      case 'hsv':
-      case 'union':
-        return '/hsv/classes';
       case 'admin':
         return '/admin/faculties';
       default: return '/';
@@ -70,9 +65,6 @@ function AppRoutes() {
 
         {/* Faculty Routes */}
         <Route path="faculty/classes" element={<ViewClassesPage />} />
-
-        {/* HSV Routes */}
-        <Route path="hsv/classes" element={<ViewHSVClassesPage />} />
 
         {/* Admin Routes */}
         <Route path="admin/faculties" element={<ViewFacultiesPage />} />

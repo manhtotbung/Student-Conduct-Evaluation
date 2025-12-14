@@ -73,7 +73,7 @@ const UserFormModal = ({ userToEdit, onSave, onClose }) => {
     }
     if (userToEdit && !dataToSend.password) delete dataToSend.password;
     if(dataToSend.role_code !== 'student') dataToSend.student_code = null;
-    if(!['teacher', 'faculty', 'hsv', 'union'].includes(dataToSend.role_code)) dataToSend.faculty_code = null;
+    if(!['teacher', 'faculty'].includes(dataToSend.role_code)) dataToSend.faculty_code = null;
 
     try {
       await onSave(dataToSend, userToEdit?.id || userToEdit?.username);
@@ -127,8 +127,8 @@ const UserFormModal = ({ userToEdit, onSave, onClose }) => {
              </Form.Group>
            )}
 
-           {/* Hiện faculty_code nếu role là teacher, faculty, hsv, union */}
-           {['teacher', 'faculty', 'hsv', 'union'].includes(formData.role_code) && (
+           {/* Hiện faculty_code nếu role là teacher, faculty */}
+           {['teacher', 'faculty'].includes(formData.role_code) && (
              <Form.Group className="mb-3">
                <Form.Label htmlFor="faculty_code">Khoa</Form.Label>
                <Form.Select id="faculty_code" name="faculty_code" value={formData.faculty_code || ''} onChange={handleChange} disabled={isLoadingRefs || isSaving}>

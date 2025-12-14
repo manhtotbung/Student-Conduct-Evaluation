@@ -87,13 +87,19 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
             <tr>
               <th style={{borderBottom: "none"}}>MSV</th>
               <th style={{borderBottom: "none"}}>Họ tên</th>
-              <th className="text-end" style={{borderBottom: "none"}}>Tổng điểm<Form.Label></Form.Label></th>
+              <th className="text-center" style={{borderBottom: "none"}}>Tổng điểm</th>  
+              <th className="text-center" style={{borderBottom: "none"}}>Tổng điểm mới</th>        
+              <th className="text-center" style={{borderBottom: "none"}}>Ghi chú</th>
+              <th style={{borderBottom: "none"}}></th>
               <th style={{borderBottom: "none"}}></th>
             </tr>
             <tr>
               <th><Form.Control name="msv" value={formData.msv} onChange={(e) => setFormData({...formData, msv: e.target.value})} size='sm'></Form.Control></th>
               <th><Form.Control name="name" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} size='sm'></Form.Control></th>
-              <th style={{alignContent:'center'}}><i className="fa-solid fa-magnifying-glass"></i></th>
+              <th style={{alignContent:'center'}}></th>
+              <th></th>
+              <th></th>
+              <th></th>
               <th></th>
             </tr>
           </thead>
@@ -102,7 +108,9 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
               <tr key={s.student_code}>
                 <td>{s.student_code}</td>
                 <td>{s.full_name}</td>
-                <td className="text-end">{s.total_score ?? 0}</td>
+                <td className="text-center">{s.total_score ?? 0}</td>
+                <td className="text-center">{s.total_score ?? 0}</td>
+                <td className="text-end"><Form.Control as="textarea" placeholder='Ghi chú..' style={{height:"1px"}}></Form.Control></td>
                 <td className="text-end">
                   {/* Dùng Button variant="outline-primary" size="sm" */}
                   <Button
@@ -112,6 +120,17 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
                     onClick={() => setSelectedStudent({ code: s.student_code, name: s.full_name })}
                   >
                     Xem/Sửa
+                  </Button>
+                </td>
+                <td className="text-end">
+                  {/* Dùng Button variant="outline-primary" size="sm" */}
+                  <Button
+                    className="btn-main"
+                    variant='success'
+                    size="sm"
+                    onClick={() => setSelectedStudent({ code: s.student_code, name: s.full_name })}
+                  >
+                    Duyệt
                   </Button>
                 </td>
               </tr>

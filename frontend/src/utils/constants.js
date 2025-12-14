@@ -29,22 +29,6 @@ export const MENUS = {
       text: "Tổng hợp theo lớp",
     },
   ],
-  union: [
-    {
-      key: "hsv-classes",
-      path: "/hsv/classes",
-      icon: "bi-people",
-      text: "HSV – Xác nhận ĐTN/HSV",
-    },
-  ],
-  hsv: [
-    {
-      key: "hsv-classes",
-      path: "/hsv/classes",
-      icon: "bi-people",
-      text: "HSV – Xác nhận ĐTN/HSV",
-    },
-  ],
   admin: [
     {
       key: "view-faculties",

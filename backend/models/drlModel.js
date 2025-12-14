@@ -2,7 +2,7 @@ import pool from '../db.js';
 
 //Lấy danh sách tiêu chí DRL
 export const getCriteria = async (term) =>{
-    const query = `select c.id, c.term_code, c.code, c.title, c.type,c.max_points,cg.title as group_title,cg.code as group_code,c.require_hsv_verify,
+    const query = `select c.id, c.term_code, c.code, c.title, c.type,c.max_points,cg.title as group_title,cg.code as group_code,
       coalesce((
         select json_agg(
           json_build_object(
@@ -30,7 +30,7 @@ export const getCriteria = async (term) =>{
 
 //Lấy danh sách tự đánh giá DRL của sinh viên
 export const getSelfAssessment_student = async (student_code,term) =>{
-  const query = `select sa.criterion_id, sa.option_id, sa.text_value, sa.self_score,sa.is_hsv_verified, sa.hsv_note
+  const query = `select sa.criterion_id, sa.option_id, sa.text_value, sa.self_score
     from drl.self_assessment sa join ref.student s 
     on s.id = sa.student_id
     where s.student_code = $1 and sa.term_code = $2
@@ -50,26 +50,7 @@ export const postSelfAssessment = async (student_code, term_code, items) =>{
 
   const student_id = studentID.rows[0].id;
 
-  //Lấy TẤT CẢ criterion_id của các tiêu chí cần HSV xác nhận
-  const criteriaRequireHSV = await pool.query(
-    `SELECT id FROM drl.criterion 
-     WHERE term_code = $1 AND require_hsv_verify = TRUE`,
-    [term_code]
-  );
-
-  //Tạo Set để kiểm tra nhanh
-  const hsvRequiredIds = new Set(
-    criteriaRequireHSV.rows.map(row => row.id)
-  );
-  
   for (const it of items) {
-    //Kiểm tra criterion_id có trong Set không
-    const requiresHSV = hsvRequiredIds.has(it.criterion_id);
-
-    if (requiresHSV) {
-      //Tiêu chí cần HSV xác nhận → Set điểm = 0
-      it.score = 0;
-    }
     //lưu các đánh giá vào self_assessment và các bảng liên quan
     await pool.query(
       `insert into drl.self_assessment (student_id, term_code, criterion_id, option_id, text_value, self_score, updated_at)
@@ -83,9 +64,8 @@ export const postSelfAssessment = async (student_code, term_code, items) =>{
         [student_id,term_code,it.criterion_id, it.option_id || null, it.text_value || null,it.score || 0]);
   }
 
-  //Tính tổng điểm(KHÔNG bao gồm tiêu chí chưa HSV xác nhận)
+  //Tính tổng điểm
   const sumPoint = items
-    .filter(x => !hsvRequiredIds.has(x.criterion_id)) // Loại bỏ tiêu chí cần HSV
     .reduce((sum, x) => sum + (x.score || 0), 0);
   
   await pool.query(
