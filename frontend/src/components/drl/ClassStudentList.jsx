@@ -13,6 +13,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
   const [error, setError] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [formData, setFormData] = useState({ msv: '', name: '' });
+  const [note, setNote] = useState({}); // State để lưu ghi chú cho từng sinh viên
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -109,7 +110,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
               <td>{s.full_name}</td>
               <td className="text-center">{s.total_score ?? 0}</td>
               <td className="text-center">{s.total_score ?? 0}</td>
-              <td className="text-end"><Form.Control as="textarea" placeholder='Ghi chú..' style={{ height: "1px" }}></Form.Control></td>
+              <td className="text-end"><Form.Control as="textarea" placeholder='Ghi chú..' style={{ height: "1px" }} onChange={(e)=> setNote(e.target.value)}></Form.Control></td>
               <td className="text-end">
                 {/* Dùng Button variant="outline-primary" size="sm" */}
                 <Button
@@ -153,6 +154,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
           studentCode={selectedStudent.code}
           studentName={selectedStudent.name}
           term={term}
+          note={note}
           onClose={handleModalClose}
         />
       )}
