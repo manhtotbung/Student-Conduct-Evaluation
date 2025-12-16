@@ -3,11 +3,12 @@ import pool from '../db.js';
 //Hiển thị danh sách sinh viên trong lớp 
 export const getStudents = async (username, term) =>{
   const query = `
-    SELECT s.student_code, s.name as full_name, c.name as class_name, ts.total_score
+    SELECT s.student_code, s.name as full_name, ah.old_score, ah.new_score 
     FROM ref.teachers t
     JOIN ref.classes c ON c.teacher_id = t.id
     JOIN ref.students s ON s.class_id = c.id
-    LEFT JOIN drl.term_score ts ON ts.student_id = s.id AND ts.term_code = $2
+    JOIN drl.assessment_history ahSV ON ahSV.student_id = s.id AND ahSV.term_code = $2 and ahSV.role ='student'
+    LEFT JOIN drl.assessment_history ah ON ah.student_id = s.id AND ah.term_code = $2 and ah.role ='teacher'
     WHERE t.teacher_code = $1 
     ORDER BY c.name, s.student_code
   `;
