@@ -105,8 +105,8 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
             <tr key={s.student_code}>
               <td>{s.student_code}</td>
               <td>{s.full_name}</td>
-              <td className="text-center">{s.total_score ?? 0}</td>
-              <td className="text-center">{s.total_score ?? 0}</td>
+              <td className="text-center">{s.old_score ?? 0}</td>
+              <td className="text-center">{s.total_score || s.old_score || 0}</td>
               <td className="text-end">
                 {/* Dùng Button variant="outline-primary" size="sm" */}
                 <Button

@@ -66,25 +66,17 @@ export const postSelfAssessment = async (student_code, term_code, items , user_i
 
   //Tính tổng điểm
   const sumPoint = items.reduce((sum, x) => sum + (x.score || 0), 0);
-
-  const oldScoreResult = await pool.query(`SELECT new_score FROM drl.assessment_history 
-    WHERE student_id = $1 AND term_code = $2  AND role = $3`,[student_id, term_code,role]);
-
-  const oldScore = oldScoreResult.rowCount > 0
-      ? oldScoreResult.rows[0].sumPoint
-      : null;
   
   await pool.query(
-    `INSERT INTO drl.assessment_history ( term_code,student_id, old_score, new_score, changed_by, role, note, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+    `INSERT INTO drl.assessment_history ( term_code,student_id, total_score, changed_by, role, note, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, now())
       ON CONFLICT (student_id, term_code, role)
       DO UPDATE SET
-        old_score = drl.assessment_history.new_score,
-        new_score = EXCLUDED.new_score,
+        total_score = EXCLUDED.total_score,
         changed_by = EXCLUDED.changed_by,
         note = EXCLUDED.note,
         updated_at = now()`,
-      [term_code,student_id, oldScore, sumPoint,user_id,role,note]
+      [term_code,student_id, sumPoint,user_id,role,note]
   );
 
   return { message: "Lưu thành công đánh giá", student_id, sumPoint };
