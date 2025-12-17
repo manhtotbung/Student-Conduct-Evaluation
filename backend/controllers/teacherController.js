@@ -1,4 +1,4 @@
-import { getStudents, getStudentsNot,postStudentAllNotAssessment } from '../models/teacherModel.js';
+import { getStudents, getStudentsNot,postLockAss,postStudentAllNotAssessment } from '../models/teacherModel.js';
 import { getSelfAssessment_student, postSelfAssessment } from '../models/drlModel.js';
 
 export const getAllStudents = async (req, res) => {
@@ -89,9 +89,11 @@ export const postAcceptStudent = async (req,res) =>{
 
   try {
     const rows = await postAccept(username, term, user_id);
+    const lock = await postLockAss(username, term, user_id);
     res.json(rows);
   } catch (error) {
     console.error('Lỗi ở acceptAssessment', error);
     res.status(500).json({ message: 'Lỗi hệ thống' });
   }
 };
+//Khoa sinh vien 

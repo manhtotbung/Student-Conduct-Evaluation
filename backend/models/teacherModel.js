@@ -76,3 +76,21 @@ export const postAccept = async(username, term, user_id) => {
     }
   }
 };
+
+//KHoa danh gia 
+export const postLockAss = async (teacher_code, term, user_id) => {
+  // Lấy class_id của GV
+  const cls = await pool.query(`SELECT c.id FROM ref.teachers t JOIN ref.classes c ON c.teacher_id = t.id WHERE t.teacher_code = $1`, [teacher_code]);
+  if (cls.rowCount === 0) return;
+
+  const class_id = cls.rows[0].id;
+
+  await pool.query(`INSERT INTO drl.class_term_status(class_id, term_code, is_teacher_approved, teacher_approved_at, updated_at)
+      VALUES ($1, $2, true, now(), now())
+      ON CONFLICT (class_id, term_code)
+      DO UPDATE SET
+        is_teacher_approved = true,
+        teacher_approved_at = now(),
+        updated_at = now()
+  `, [class_id, term]);
+};
