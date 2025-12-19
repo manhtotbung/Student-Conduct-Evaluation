@@ -1,19 +1,20 @@
 import { putLockTerm } from "../models/termModel.js";
 
-let lastRun = 0;
+let date = null;
 
 export const autoLockTerm = async (req, res,next) => {
   try {
-    const dateNow = Date.now();
+    const dateNow = new Date();
+    const dateToday = dateNow.toISOString().slice(0,10);
 
-    // Chạy mỗi 10 phút
-    if (dateNow - lastRun > 10 * 60 * 1000) {
-      await putLockTerm();
-      lastRun = dateNow;
+    //ktra hang ngay
+    if (date !== dateToday && dateNow.getHours() === 0) {
+      await putLockTerm(); date = dateToday; 
+      console.log("[AUTO LOCK TERM] Run at 0h:", dateToday);
     }
 
   } catch (errorr) {
-    console.error("Lỗi ở ", errorr);
+    console.error("Lỗi ở autoLockTerm", errorr);
   }
   next();
 };
