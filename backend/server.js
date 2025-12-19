@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Load .env từ thư mục gốc
+// Load .env
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
@@ -35,6 +35,7 @@ import adminRoutes from "./routes/admin.js";
 import termRoutes from "./routes/term.js";
 import classLeaderRoutes from "./routes/classLeader.js";
 import { protectedRoute, requireRole } from "./middlewares/authMiddleware.js";
+import autoLockTerm from "./middlewares/autoLockTermMiddleware.js";
 import { serveEvidence } from "./controllers/evidenceController.js";
 
 
@@ -44,6 +45,7 @@ app.get("/", (_req, res) => res.send("DRL API is running.")); // Kiểm tra sứ
 app.get("/api/uploads/evidence/:filename", serveEvidence);
 
 app.use("/api/auth", authRoutes);
+app.use(autoLockTerm);
 app.use("/api/terms", termRoutes);
 app.use("/api/drl", protectedRoute, requireRole('student', 'teacher', 'admin', 'faculty') , drlRoutes);
 app.use("/api/teacher",protectedRoute, requireRole('teacher'),teacherRoutes);

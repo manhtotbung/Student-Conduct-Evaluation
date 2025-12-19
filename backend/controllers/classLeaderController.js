@@ -15,7 +15,6 @@ export const getStudentsLeader = async (req, res) => {
   }
 };
 /**
- * Giáo viên chỉ định lớp trưởng cho lớp của mình
  * POST /api/teacher/class-leader/assign
  */
 export const assignClassLeader = async (req, res) => {
