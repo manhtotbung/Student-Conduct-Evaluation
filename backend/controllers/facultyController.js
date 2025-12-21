@@ -67,8 +67,7 @@ export const updateStudentScore = async (req, res) => {
       return res.status(400).json({ error: 'Giáo viên chưa chốt điểm lớp này, Khoa chưa thể chỉnh sửa.' });
     }
 
-    // 2. Lưu điểm
-    // Hàm postSelfAssessment sẽ cập nhật bảng drl.self_assessment và drl.assessment_history
+    //2. cập nhật bảng drl.self_assessment và drl.assessment_history
     await postSelfAssessment(student_code, term_code, items, user_id, 'faculty', note);
 
     res.json({ message: 'Cập nhật điểm thành công' });
