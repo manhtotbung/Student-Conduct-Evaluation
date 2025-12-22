@@ -4,6 +4,7 @@ import { postSelfAssessment } from '../models/drlModel.js';
 
 //lấy toàn bộ sinh viên thuộc các lớp của khoa trong một học kỳ
 export const getAllFacultyStudents = async (req, res) => {
+  console.log('getAllFacultyStudents called with query:');
   const faculty_id = req.user?.faculty_id;
   const { term } = req.query || {};
   if (!faculty_id || !term) {
@@ -58,6 +59,7 @@ export const updateStudentScore = async (req, res) => {
 // Khoa duyệt lớp
 export const approveClass = async (req, res) => {
   const faculty_id = req.user?.faculty_id;
+  const user_id = req.user?.user_id;
   const { class_code, term } = req.body; 
 
   if (!faculty_id || !class_code || !term) {
@@ -65,7 +67,7 @@ export const approveClass = async (req, res) => {
   }
 
   try {
-    await approveClassByFaculty(String(class_code).trim(), faculty_id, String(term).trim());
+    await approveClassByFaculty(String(class_code).trim(), faculty_id, String(term).trim(), user_id);
     res.json({ message: 'Đã duyệt lớp thành công!' });
   } catch (err) {
     if (err.message === 'CLASS_NOT_FOUND_OR_NOT_IN_FACULTY') {
