@@ -47,14 +47,18 @@ export const postAccept = (term)=>{
 }
 
 // --- FACULTY APIs ---
-export const getFacultyClasses = (term) => {
-  return api.get(`/api/faculty/classes?term=${encodeURIComponent(term)}`);
+export const getFacultyStudents = (term) => {
+  return api.get(`/api/faculty/students?term=${encodeURIComponent(term)}`);
 };
 
 export const getFacultyClassStudents = (class_code, term) => {
   return api.get(
     `/api/faculty/class/students?class_code=${encodeURIComponent(class_code)}&term=${encodeURIComponent(term)}`
   );
+};
+
+export const approveFacultyClass = (class_code, term) => {
+  return api.post('/api/faculty/class/approve', { class_code, term });
 };
 
 // --- ADMIN VIEW APIs ---

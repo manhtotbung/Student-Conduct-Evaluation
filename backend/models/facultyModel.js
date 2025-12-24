@@ -11,7 +11,6 @@ export const listStudentsByFacultyAndTerm = async (faculty_id, term) => {
       c.name AS class_name,
       COALESCE(ah_teacher.total_score, 0)::int AS teacher_score,
       ah_faculty.total_score::int AS faculty_score,
-      COALESCE(ts.total_score, 0)::int AS total_score,
       ah_faculty.note,
       COALESCE(st.is_faculty_approved, false) as is_faculty_approved
     FROM ref.classes c
@@ -23,10 +22,12 @@ export const listStudentsByFacultyAndTerm = async (faculty_id, term) => {
     LEFT JOIN drl.assessment_history ah_faculty 
       ON ah_faculty.student_id = s.id AND ah_faculty.term_code = $2 AND ah_faculty.role = 'faculty'
     WHERE c.faculty_id = $1
+      AND COALESCE(st.is_teacher_approved, false) = true
     ORDER BY c.name, s.student_code
     `,
     [faculty_id, term]
   );
+  console.log(rows);
   return rows;
 };
 
@@ -48,7 +49,7 @@ export const checkEditAccess = async (student_code, faculty_id, term_code) => {
 };
 
 // Khoa duyệt bảng điểm của một lớp
-export const approveClassByFaculty = async (class_code, faculty_id, term) => {
+export const approveClassByFaculty = async (class_code, faculty_id, term, user_id) => {
   return withTransaction(async (client) => {
     //Lấy thông tin lớp và trạng thái hiện tại 
     const { rows } = await client.query(
@@ -66,11 +67,37 @@ export const approveClassByFaculty = async (class_code, faculty_id, term) => {
       throw new Error('CLASS_NOT_FOUND_OR_NOT_IN_FACULTY');
     }
 
-    const { class_id, is_teacher_approved, is_faculty_approved } = rows[0];
+    const { class_id, is_teacher_approved } = rows[0];
+
+    if (!is_teacher_approved) throw new Error('TEACHER_NOT_APPROVED_YET');
+
+    // Sao chép tổng điểm giáo viên sang điểm khoa nếu khoa chưa có dữ liệu đánh giá
+    await client.query(
+      `INSERT INTO drl.assessment_history (student_id, term_code, role, total_score, changed_by, created_at, updated_at)
+       SELECT 
+         ah_teacher.student_id,
+         ah_teacher.term_code,
+         'faculty' as role,
+         ah_teacher.total_score,
+         $3 as changed_by,
+         now() as created_at,
+         now() as updated_at
+       FROM drl.assessment_history ah_teacher
+       JOIN ref.students s ON s.id = ah_teacher.student_id
+       WHERE s.class_id = $1
+         AND ah_teacher.term_code = $2
+         AND ah_teacher.role = 'teacher'
+         AND NOT EXISTS (
+           SELECT 1 FROM drl.assessment_history ah_faculty
+           WHERE ah_faculty.student_id = ah_teacher.student_id
+             AND ah_faculty.term_code = ah_teacher.term_code
+             AND ah_faculty.role = 'faculty'
+         )`,
+      [class_id, term, user_id]
+    );
 
     if (!is_teacher_approved) throw new Error('TEACHER_NOT_APPROVED_YET');
     if (is_faculty_approved) throw new Error('FACULTY_ALREADY_APPROVED');
- 
     //Cập nhật trạng thái duyệt của khoa
     await client.query(
       `INSERT INTO drl.class_term_status (class_id, term_code, is_faculty_approved, faculty_approved_at, updated_at)

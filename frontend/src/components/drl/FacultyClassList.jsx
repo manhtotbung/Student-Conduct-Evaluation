@@ -3,9 +3,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Card, Table, Alert, Button, Modal, Form } from 'react-bootstrap'; // Import components
 import { useTerm } from '../../layout/DashboardLayout';
 import useAuth from '../../hooks/useAuth';
-import { getAdminClasses, getFacultyClasses } from '../../services/drlService';
+import { getAdminClasses, getFacultyStudents, approveFacultyClass } from '../../services/drlService';
 import LoadingSpinner from '../common/LoadingSpinner';
-import ClassStudentList from './ClassStudentList';
+import StudentAssessmentModal from './StudentAssessmentModal';
 import axios from 'axios';
 const FacultyClassList = ({ facultyCode, setFaculty }) => {
   const { term } = useTerm();
@@ -15,13 +15,10 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedClass, setSelectedClass] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [classCode, setClassCode] = useState('');
-
-
-  const [showClassModal, setShowClassModal] = useState(false); // State quản lý Modal
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
 
@@ -29,11 +26,11 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
     if (!term || !user?.role) return;
     setLoading(true);
     setError(null);
-    setSelectedClass(null);
+    setSelectedStudent(null);
     try {
       let res;
       if (user.role === 'faculty') {
-        res = await getFacultyClasses(term);
+        res = await getFacultyStudents(term);
         if (setFaculty) setFaculty(user.faculty_code || null);
       } else if (user.role === 'admin') {
         if (!facultyCode) throw new Error('Thiếu facultyCode cho admin');
@@ -55,17 +52,48 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
     fetchData();
   }, [fetchData]);
 
-  const handleOpenClassModal = (fac) => {
-    setSelectedClass(fac);
-    setShowClassModal(true);
+  const handleModalClose = () => {
+    setSelectedStudent(null);
+    fetchData(); // Cập nhật lại danh sách sau khi đóng modal
   };
 
-  const handleCloseClassModal = () => {
-    setShowClassModal(false);
-    setSelectedClass(null);
-    // Không cần fetchData() trừ khi FacultyClassList có thay đổi điểm
-    // Giữ nguyên logic đóng modal:
-    // setFaculties(null); // Dòng này có vẻ sai logic trong code gốc (setFaculties(null) trong handleModalClose)
+  const handleApproveAll = async () => {
+    // Lấy danh sách lớp duy nhất từ danh sách sinh viên
+    const uniqueClasses = [...new Set(classes.map(c => c.class_name))];
+    
+    if (uniqueClasses.length === 0) {
+      alert('Không có lớp nào để duyệt!');
+      return;
+    }
+
+    if (!window.confirm(`Bạn có chắc muốn duyệt tất cả ${uniqueClasses.length} lớp?`)) {
+      return;
+    }
+
+    setLoading(true);
+    let successCount = 0;
+    let errorMessages = [];
+
+    for (const className of uniqueClasses) {
+      try {
+        await approveFacultyClass(className, term);
+        successCount++;
+      } catch (err) {
+        const errorMsg = err.response?.data?.error || err.message;
+        errorMessages.push(`${className}: ${errorMsg}`);
+      }
+    }
+
+    setLoading(false);
+
+    if (successCount > 0) {
+      alert(`Đã duyệt thành công ${successCount}/${uniqueClasses.length} lớp!`);
+      fetchData(); // Tải lại danh sách
+    }
+
+    if (errorMessages.length > 0) {
+      alert('Một số lớp không thể duyệt:\n' + errorMessages.join('\n'));
+    }
   };
 
   const filteredClasses = classes.filter(c => {
@@ -164,7 +192,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                   <th style={{ borderBottom: "none" }}>Họ Tên</th>
                   <th style={{ borderBottom: "none" }}>Lớp</th>
                   <th className="text-center" style={{ borderBottom: "none" }}>Tổng điểm (gv)</th>
-                  <th className="text-center" style={{ borderBottom: "none" }}>Tổng điểm (khoa)</th>  
+                  <th className="text-center" style={{ borderBottom: "none" }}>Tổng điểm (khoa)</th>
                   <th style={{ borderBottom: "none" }}></th>
                   <th style={{ borderBottom: "none" }}></th>
                 </tr>
@@ -180,22 +208,20 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
               </thead>
               <tbody>
                 {filteredClasses.map((c) => (
-                  <tr key={c.class_name}>
-                    <td>{c.class_name}</td>
-                    <td className="text-end">{c.total_students ?? 0}</td>
-                    <td className="text-end">
-                      {c.avg_score == null ? '—' : Number(c.avg_score).toFixed(2)}
+                  <tr key={c.student_code}>
+                    <td>{c.student_code}</td>
+                    <td>{c.full_name}</td>
+                    <td>
+                      {c.class_name}
                     </td>
-
-                    <td></td>
-                    <td></td>
+                    <td className='text-center'>{c.teacher_score || 0}</td>
+                    <td className='text-center'>{c.faculty_score || 0}</td>
                     <td className="text-end">
-                      {/* Dùng Button variant="outline-primary" size="sm" */}
                       <Button
                         size="sm"
                         variant='success'
                         className="btn-main"
-                        onClick={() => handleOpenClassModal(c.class_name)}
+                        onClick={() => setSelectedStudent({ code: c.student_code })}
                       >
                         Xem/Sửa
                       </Button>
@@ -211,7 +237,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
           )}
         </Card.Body>
       </Card>
-      <div className="d-flex mt-3" style={{justifyContent:"space-between"}}>
+      <div className="d-flex mt-3" style={{ justifyContent: "space-between" }}>
         <Button onClick={previewTemplate} variant="outline-success" className="mt-3">
           <i className="fa-regular fa-file-excel m-2"></i>
           Xuất Excel
@@ -221,37 +247,22 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
           size="sm"
           variant='success'
           className="btn-main mt-3"
+          onClick={handleApproveAll}
+          disabled={loading || classes.length === 0}
         >
-          Duyệt
+          Duyệt tất cả
         </Button>
       </div>
 
 
-      {/* Khi chọn một lớp, component ClassStudentList sẽ hiện ra */}
-
-
-      {/* Modal hiển thị danh sách lớp của khoa */}
-      <Modal
-        show={showClassModal}
-        onHide={handleCloseClassModal}
-        keyboard={false}
-        size="lg" // Thay thế modal-lg
-        scrollable // Thay thế modal-dialog-scrollable
-      >
-        <Modal.Header closeButton>
-          {/* Dùng title động dựa trên selectedFaculty */}
-          <Modal.Title id="staticBackdropLabel">
-            {selectedClass ? `Danh sách sinh viên lớp ${selectedClass}` : 'Danh sách lớp'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedClass && (
-            <div className="mt-3">
-              <ClassStudentList classCode={selectedClass} term={term} />
-            </div>
-          )}
-        </Modal.Body>
-      </Modal>
+      {selectedStudent && (
+        <StudentAssessmentModal
+          studentCode={selectedStudent.code}
+          term={term}
+          onClose={handleModalClose}
+          page={user.role}
+        />
+      )}
       <Modal show={isPreviewOpen} onHide={() => setIsPreviewOpen(false)} size="xl" scrollable>
         <Modal.Header closeButton>
           <Modal.Title>Bản xem trước</Modal.Title>
