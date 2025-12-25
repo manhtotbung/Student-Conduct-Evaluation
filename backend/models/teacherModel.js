@@ -47,7 +47,6 @@ export const postAccept = async (teacherId, term, user_id) => {
     const studentAss = await getStudents(teacherId, term, client);
 
     for (const student of studentAss) {
-      // 1. Xác định điểm chốt
       const totalScore = student.total_score !== null
         ? student.total_score      // GV đã chấm
         : student.old_score;       // lấy điểm SV
@@ -67,7 +66,7 @@ export const postAccept = async (teacherId, term, user_id) => {
 };
 
 //KHoa danh gia 
-export const postLockAss = async (teacherId, term, user_id) => {
+export const postLockAss = async (teacherId, term) => {
   return withTransaction(async (client) => {
     // Lấy class_id của GV
     const cls = await client.query(`SELECT id FROM ref.classes WHERE teacher_id = $1`, [teacherId]);

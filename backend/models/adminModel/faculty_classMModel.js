@@ -13,6 +13,7 @@ export const getfaculty = async (term) =>{
     return rows;
 };
 
+
 export const getClass = async (term, faculty) =>{
     const params = [term];
     
@@ -49,4 +50,27 @@ export const getStudent = async (class_code,term) =>{
 
     const {rows} = await pool.query(query,[class_code,term]);
     return rows;
+};
+
+export const postAccept = async (term, user_id) => {
+  return withTransaction(async (client) => {
+    const facultyAss = await getfaculty(term);
+
+    for (const student of facultyAss) {
+      const totalScore = student.total_score !== null
+        ? student.total_score      // Ad đã chấm
+        : student.old_score;       // lấy điểm Khoa
+
+      if (totalScore !== null) {
+        await pool.query(`INSERT INTO drl.assessment_history(term_code, student_id, total_score, changed_by, role, updated_at)
+        VALUES ($1, $2, $3, $4, 'admin', now())
+        ON CONFLICT (student_id, term_code, role)
+        DO UPDATE SET
+          total_score = EXCLUDED.total_score,
+          changed_by  = EXCLUDED.changed_by,
+          updated_at  = now()
+      `, [term, student.id, totalScore, user_id]);
+      }
+    }
+  });
 };

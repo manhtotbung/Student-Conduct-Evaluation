@@ -102,13 +102,13 @@ export const getAllStudentsInClassController = async (req, res) => {
 //Duyet toan bo SV 
 export const postAcceptStudent = async (req,res) =>{
   const { term } = req.body;
-  const { teacher_id, user_id } = req.user;
+  const { teacher_id} = req.user;
 
   if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
 
   try {
     const rows = await postAccept(teacher_id, term, user_id);
-    const lock = await postLockAss(teacher_id, term, user_id);
+    const lock = await postLockAss(teacher_id, term);
     res.json(rows);
   } catch (error) {
     console.error('Lỗi ở acceptAssessment', error);
