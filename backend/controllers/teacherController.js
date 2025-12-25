@@ -102,7 +102,7 @@ export const getAllStudentsInClassController = async (req, res) => {
 //Duyet toan bo SV 
 export const postAcceptStudent = async (req,res) =>{
   const { term } = req.body;
-  const { teacher_id} = req.user;
+  const { teacher_id,user_id} = req.user;
 
   if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
 
@@ -111,8 +111,9 @@ export const postAcceptStudent = async (req,res) =>{
     const lock = await postLockAss(teacher_id, term);
     res.json(rows);
   } catch (error) {
-    console.error('Lỗi ở acceptAssessment', error);
+    if (error.status === 403) return res.status(403).json({error: "Cảnh báo",message: error.message});
+
+    console.error('Lỗi ở acceptAssessment', error);   
     res.status(500).json({ message: 'Lỗi hệ thống' });
   }
 };
-//Khoa sinh vien 

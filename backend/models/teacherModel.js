@@ -44,6 +44,13 @@ export const postStudentAllNotAssessment = async (teacherId, term, user_id) => {
 
 export const postAccept = async (teacherId, term, user_id) => {
   return withTransaction(async (client) => {
+    const Lock = await checkTeacherLocked(teacherId, term, client);
+    if (Lock) {
+      const error = new Error("Đánh giá đã bị khóa, không thể duyệt lại");
+      error.status = 403;
+      throw error;
+    }
+
     const studentAss = await getStudents(teacherId, term, client);
 
     for (const student of studentAss) {
@@ -82,6 +89,16 @@ export const postLockAss = async (teacherId, term) => {
           updated_at = now()
     `, [class_id, term]);
   });
+};
+
+//kiem tra khoa 
+const checkTeacherLocked = async (teacherId, term, client) => {
+  const rs = await client.query(`
+    SELECT cts.is_teacher_approved FROM ref.classes c
+    JOIN drl.class_term_status cts  ON c.id = cts.class_id
+    WHERE c.teacher_id = $1 AND cts.term_code = $2`, [teacherId, term]);
+
+  return rs.rowCount > 0 && rs.rows[0].is_teacher_approved === true;
 };
 
 // Lấy tất cả sinh viên trong lớp (không cần điều kiện đã đánh giá)
