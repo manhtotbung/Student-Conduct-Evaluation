@@ -1,5 +1,5 @@
 import pool from '../db.js';
-import { getStudentClass, postLeaderAssessment } from '../models/classLeaderModel.js';
+import { getStudentClass, postLeaderAssessment,checkLeaderLocked,postLeaderAccept,postLockAss } from '../models/classLeaderModel.js';
 
 export const getStudentsLeader = async (req, res) => {
   const username = req.user?.username; // Lấy username từ req.user (authMiddleware hàm protectedRoute)
@@ -38,6 +38,40 @@ export const saveLeaderAssessment = async (req, res) => {
   }
 };
 
+  //Duyet toan bo SV 
+  export const postAcceptStudent = async (req,res) =>{
+    const { term } = req.body;
+    const { student_id,user_id} = req.user;
+  
+    if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
+  
+    try {
+      const rows = await postLeaderAccept(student_id, term, user_id);
+      const lock = await postLockAss(student_id, term);
+      res.json(rows);
+    } catch (error) {
+      if (error.status === 403) return res.status(403).json({error: "Cảnh báo",message: error.message});
+  
+      console.error('Lỗi ở acceptAssessment', error);   
+      res.status(500).json({ message: 'Lỗi hệ thống' });
+    }
+  };
+  
+  // Kiểm tra trạng thái khóa của leader
+  export const getLeaderLockStatus = async (req, res) => {
+    const { teacher_id } = req.user;
+    const { term } = req.query;
+  
+    if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
+  
+    try {
+      const isLocked = await checkLeaderLocked(teacher_id, term);
+      res.json({ isLocked });
+    } catch (error) {
+      console.error('Lỗi ở getTeacherLockStatus', error);
+      res.status(500).json({ message: 'Lỗi hệ thống' });
+    }
+  };
 /**
  * POST /api/teacher/class-leader/assign
  */
