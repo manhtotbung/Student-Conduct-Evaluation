@@ -2,7 +2,7 @@ import pool from "../db.js";
 import { withTransaction } from '../utils/helpers.js';
 
 export const getStudentClass = async (username, term) => {
-    const query = `SELECT s.student_code,s.name,ah.total_score AS total_score,ahSV.total_score AS old_score, ah.note 
+    const query = `SELECT s.id, s.student_code,s.name,ah.total_score AS total_score,ahSV.total_score AS old_score, ah.note 
 	    FROM ref.students leader
 	    JOIN ref.students s ON s.class_id = leader.class_id
 	    LEFT JOIN drl.assessment_history ahSV ON ahSV.student_id = s.id AND ahSV.term_code = $2 AND ahSV.role = 'student'
@@ -53,7 +53,7 @@ export const postLeaderAssessment = async (student_code, term_code, items , user
 
 };
 
-export const postLeaderAccept = async (studentId, term, user_id) => {
+export const postLeaderAccept = async (studentId, term, user_id, username) => {
   return withTransaction(async (client) => {
     const Lock = await checkLeaderLocked(studentId, term, client);
     if (Lock) {
@@ -69,7 +69,7 @@ export const postLeaderAccept = async (studentId, term, user_id) => {
     }
 
     // Lấy tất cả sinh viên trong lớp
-    const students = await getStudentClass (username, term);
+    const students = await getStudentClass(username, term);
 
     for (const student of students) {
       const totalScore = student.total_score !== null
@@ -119,4 +119,81 @@ export const checkLeaderLocked = async (studentId, term, client = pool) => {
   return rs.rowCount > 0 && rs.rows[0].is_leader_approved === true;
 };
 
+// Kiểm tra giáo viên có phải GVCN của lớp không
+export const checkTeacherClass = async (class_code, teacher_code) => {
+  const result = await pool.query(
+    `SELECT c.id, c.class_code, t.teacher_code
+     FROM ref.classes c
+     JOIN ref.teachers t ON c.teacher_id = t.id
+     WHERE c.class_code = $1 AND t.teacher_code = $2`,
+    [class_code, teacher_code]
+  );
+  return result.rows[0] || null;
+};
 
+// Kiểm tra sinh viên có thuộc lớp không
+export const checkStudentInClass = async (student_code, class_id) => {
+  const result = await pool.query(
+    `SELECT id FROM ref.students 
+     WHERE student_code = $1 AND class_id = $2`,
+    [student_code, class_id]
+  );
+  return result.rows[0] || null;
+};
+
+// Bỏ chỉ định lớp trưởng cũ
+export const removeOldClassLeader = async (class_id) => {
+  await pool.query(
+    `UPDATE ref.students 
+     SET is_class_leader = FALSE, updated_at = NOW()
+     WHERE class_id = $1 AND is_class_leader = TRUE`,
+    [class_id]
+  );
+};
+
+// Chỉ định lớp trưởng mới
+export const assignNewClassLeader = async (student_id) => {
+  await pool.query(
+    `UPDATE ref.students 
+     SET is_class_leader = TRUE, updated_at = NOW()
+     WHERE id = $1`,
+    [student_id]
+  );
+};
+
+// Bỏ chỉ định lớp trưởng và trả về student_code
+export const removeClassLeaderByClassId = async (class_id) => {
+  const result = await pool.query(
+    `UPDATE ref.students 
+     SET is_class_leader = FALSE, updated_at = NOW()
+     WHERE class_id = $1 AND is_class_leader = TRUE
+     RETURNING student_code`,
+    [class_id]
+  );
+  return result.rows[0] || null;
+};
+
+// Lấy thông tin lớp trưởng của lớp
+export const getClassLeaderByClassCode = async (class_code, teacher_code) => {
+  const result = await pool.query(
+    `SELECT s.student_code, s.name, s.is_class_leader
+     FROM ref.students s
+     JOIN ref.classes c ON s.class_id = c.id
+     JOIN ref.teachers t ON c.teacher_id = t.id
+     WHERE c.class_code = $1 AND t.teacher_code = $2 AND s.is_class_leader = TRUE`,
+    [class_code, teacher_code]
+  );
+  return result.rows[0] || null;
+};
+
+// Kiểm tra quyền lớp trưởng của sinh viên
+export const checkClassLeaderRoleByStudentCode = async (student_code) => {
+  const result = await pool.query(
+    `SELECT is_class_leader, c.class_code, c.name as class_name
+     FROM ref.students s
+     JOIN ref.classes c ON s.class_id = c.id
+     WHERE s.student_code = $1`,
+    [student_code]
+  );
+  return result.rows[0] || null;
+};

@@ -1,9 +1,21 @@
-import pool from '../db.js';
-import { getStudentClass, postLeaderAssessment,checkLeaderLocked,postLeaderAccept,postLockAss } from '../models/classLeaderModel.js';
+import {
+  getStudentClass,
+  postLeaderAssessment,
+  checkLeaderLocked,
+  postLeaderAccept,
+  postLockAss,
+  checkTeacherClass,
+  checkStudentInClass,
+  removeOldClassLeader,
+  assignNewClassLeader,
+  removeClassLeaderByClassId,
+  getClassLeaderByClassCode,
+  checkClassLeaderRoleByStudentCode
+} from '../models/classLeaderModel.js';
 
 export const getStudentsLeader = async (req, res) => {
   const username = req.user?.username; // Lấy username từ req.user (authMiddleware hàm protectedRoute)
-  const {term} = req.query || {};
+  const { term } = req.query || {};
   if (!username || !term) return res.status(400).json({ error: 'Thiếu thông tin!' });
 
   try {
@@ -11,13 +23,13 @@ export const getStudentsLeader = async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Lỗi ở getStudentsLeader', error);
-    res.status(500).send({message: "Lỗi hệ thống"});
+    res.status(500).send({ message: "Lỗi hệ thống" });
   }
 };
 
 export const saveLeaderAssessment = async (req, res) => {
-  const { term_code, items, note} = req.body || {};
-  const {role, user_id} = req.user; // Lấy role từ req.user (authMiddleware hàm protectedRoute)
+  const { term_code, items, note } = req.body || {};
+  const { role, user_id } = req.user; // Lấy role từ req.user (authMiddleware hàm protectedRoute)
 
   const student_code = req.user?.student_code; // Lấy student_code từ req.user (authMiddleware hàm protectedRoute)
 
@@ -25,8 +37,8 @@ export const saveLeaderAssessment = async (req, res) => {
     return res.status(400).json({ error: "Thiếu dữ liệu đầu vào" });
   }
 
-   try {
-    const result = await postLeaderAssessment(student_code, term_code, items , user_id, note);
+  try {
+    const result = await postLeaderAssessment(student_code, term_code, items, user_id, note);
     return res.json(result);
   } catch (error) {
     if (error.message === "Student_404") {
@@ -38,43 +50,42 @@ export const saveLeaderAssessment = async (req, res) => {
   }
 };
 
-  //Duyet toan bo SV 
-  export const postAcceptStudent = async (req,res) =>{
-    const { term } = req.body;
-    const { student_id,user_id} = req.user;
-  
-    if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
-  
-    try {
-      const rows = await postLeaderAccept(student_id, term, user_id);
-      const lock = await postLockAss(student_id, term);
-      res.json(rows);
-    } catch (error) {
-      if (error.status === 403) return res.status(403).json({error: "Cảnh báo",message: error.message});
-  
-      console.error('Lỗi ở acceptAssessment', error);   
-      res.status(500).json({ message: 'Lỗi hệ thống' });
-    }
-  };
-  
-  // Kiểm tra trạng thái khóa của leader
-  export const getLeaderLockStatus = async (req, res) => {
-    const { student_id } = req.user;
-    const { term } = req.query;
-  
-    if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
-  
-    try {
-      const isLocked = await checkLeaderLocked(student_id, term);
-      res.json({ isLocked });
-    } catch (error) {
-      console.error('Lỗi ở getLeaderLockStatus', error);
-      res.status(500).json({ message: 'Lỗi hệ thống' });
-    }
-  };
-/**
- * POST /api/teacher/class-leader/assign
- */
+//Duyet toan bo SV 
+export const postAcceptStudent = async (req, res) => {
+  const { term } = req.body;
+  const { student_id, user_id, username } = req.user;
+
+  if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
+
+  try {
+    const rows = await postLeaderAccept(student_id, term, user_id, username);
+    const lock = await postLockAss(student_id, term);
+    res.json(rows);
+  } catch (error) {
+    if (error.status === 403) return res.status(403).json({ error: "Cảnh báo", message: error.message });
+
+    console.error('Lỗi ở acceptAssessment', error);
+    res.status(500).json({ message: 'Lỗi hệ thống' });
+  }
+};
+
+// Kiểm tra trạng thái khóa của leader
+export const getLeaderLockStatus = async (req, res) => {
+  const { student_id } = req.user;
+  const { term } = req.query;
+
+  if (!term) return res.status(400).json({ message: 'Không tìm thấy học kì' });
+
+  try {
+    const isLocked = await checkLeaderLocked(student_id, term);
+    res.json({ isLocked });
+  } catch (error) {
+    console.error('Lỗi ở getLeaderLockStatus', error);
+    res.status(500).json({ message: 'Lỗi hệ thống' });
+  }
+};
+
+// Giáo viên chỉ định lớp trưởng
 export const assignClassLeader = async (req, res) => {
   const { student_code, class_code } = req.body;
   const teacher_username = req.user?.username; // Giáo viên đang đăng nhập
@@ -85,50 +96,28 @@ export const assignClassLeader = async (req, res) => {
 
   try {
     // 1. Kiểm tra giáo viên có phải là GVCN của lớp này không
-    const classCheck = await pool.query(
-      `SELECT c.id, c.class_code, t.teacher_code
-       FROM ref.classes c
-       JOIN ref.teachers t ON c.teacher_id = t.id
-       WHERE c.class_code = $1 AND t.teacher_code = $2`,
-      [class_code, teacher_username]
-    );
-
-    if (classCheck.rows.length === 0) {
+    const classInfo = await checkTeacherClass(class_code, teacher_username);
+    if (!classInfo) {
       return res.status(403).json({ error: 'Bạn không phải GVCN của lớp này' });
     }
 
-    const class_id = classCheck.rows[0].id;
+    const class_id = classInfo.id;
 
     // 2. Kiểm tra sinh viên có thuộc lớp này không
-    const studentCheck = await pool.query(
-      `SELECT id FROM ref.students 
-       WHERE student_code = $1 AND class_id = $2`,
-      [student_code, class_id]
-    );
-
-    if (studentCheck.rows.length === 0) {
+    const studentInfo = await checkStudentInClass(student_code, class_id);
+    if (!studentInfo) {
       return res.status(400).json({ error: 'Sinh viên không thuộc lớp này' });
     }
 
-    const student_id = studentCheck.rows[0].id;
+    const student_id = studentInfo.id;
 
     // 3. Bỏ chỉ định lớp trưởng cũ (nếu có)
-    await pool.query(
-      `UPDATE ref.students 
-       SET is_class_leader = FALSE, updated_at = NOW()
-       WHERE class_id = $1 AND is_class_leader = TRUE`,
-      [class_id]
-    );
+    await removeOldClassLeader(class_id);
 
     // 4. Chỉ định lớp trưởng mới
-    await pool.query(
-      `UPDATE ref.students 
-       SET is_class_leader = TRUE, updated_at = NOW()
-       WHERE id = $1`,
-      [student_id]
-    );
+    await assignNewClassLeader(student_id);
 
-    res.json({ 
+    res.json({
       message: 'Đã chỉ định lớp trưởng thành công',
       student_code,
       class_code
@@ -140,10 +129,9 @@ export const assignClassLeader = async (req, res) => {
   }
 };
 
-/**
- * Giáo viên bỏ chỉ định lớp trưởng
- * POST /api/teacher/class-leader/remove
- */
+
+// Giáo viên bỏ chỉ định lớp trưởng
+
 export const removeClassLeader = async (req, res) => {
   const { class_code } = req.body;
   const teacher_username = req.user?.username;
@@ -154,35 +142,23 @@ export const removeClassLeader = async (req, res) => {
 
   try {
     // Kiểm tra giáo viên có phải GVCN không
-    const classCheck = await pool.query(
-      `SELECT c.id FROM ref.classes c
-       JOIN ref.teachers t ON c.teacher_id = t.id
-       WHERE c.class_code = $1 AND t.teacher_code = $2`,
-      [class_code, teacher_username]
-    );
-
-    if (classCheck.rows.length === 0) {
+    const classInfo = await checkTeacherClass(class_code, teacher_username);
+    if (!classInfo) {
       return res.status(403).json({ error: 'Bạn không phải GVCN của lớp này' });
     }
 
-    const class_id = classCheck.rows[0].id;
+    const class_id = classInfo.id;
 
     // Bỏ chỉ định lớp trưởng
-    const result = await pool.query(
-      `UPDATE ref.students 
-       SET is_class_leader = FALSE, updated_at = NOW()
-       WHERE class_id = $1 AND is_class_leader = TRUE
-       RETURNING student_code`,
-      [class_id]
-    );
+    const removedStudent = await removeClassLeaderByClassId(class_id);
 
-    if (result.rows.length === 0) {
+    if (!removedStudent) {
       return res.status(400).json({ error: 'Lớp này chưa có lớp trưởng' });
     }
 
-    res.json({ 
+    res.json({
       message: 'Đã bỏ chỉ định lớp trưởng',
-      student_code: result.rows[0].student_code
+      student_code: removedStudent.student_code
     });
 
   } catch (error) {
@@ -191,10 +167,7 @@ export const removeClassLeader = async (req, res) => {
   }
 };
 
-/**
- * Lấy thông tin lớp trưởng của lớp
- * GET /api/teacher/class-leader?class_code=xxx
- */
+//Lấy thông tin lớp trưởng của lớp
 export const getClassLeader = async (req, res) => {
   const { class_code } = req.query;
   const teacher_username = req.user?.username;
@@ -204,20 +177,13 @@ export const getClassLeader = async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      `SELECT s.student_code, s.name, s.is_class_leader
-       FROM ref.students s
-       JOIN ref.classes c ON s.class_id = c.id
-       JOIN ref.teachers t ON c.teacher_id = t.id
-       WHERE c.class_code = $1 AND t.teacher_code = $2 AND s.is_class_leader = TRUE`,
-      [class_code, teacher_username]
-    );
+    const classLeader = await getClassLeaderByClassCode(class_code, teacher_username);
 
-    if (result.rows.length === 0) {
+    if (!classLeader) {
       return res.json({ class_leader: null });
     }
 
-    res.json({ class_leader: result.rows[0] });
+    res.json({ class_leader: classLeader });
 
   } catch (error) {
     console.error('Lỗi khi lấy thông tin lớp trưởng:', error);
@@ -225,10 +191,8 @@ export const getClassLeader = async (req, res) => {
   }
 };
 
-/**
- * Lớp trưởng kiểm tra quyền của mình
- * GET /api/class-leader/check
- */
+
+// Lớp trưởng kiểm tra quyền của mình
 export const checkClassLeaderRole = async (req, res) => {
   const student_code = req.user?.student_code;
 
@@ -237,23 +201,16 @@ export const checkClassLeaderRole = async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      `SELECT is_class_leader, c.class_code, c.name as class_name
-       FROM ref.students s
-       JOIN ref.classes c ON s.class_id = c.id
-       WHERE s.student_code = $1`,
-      [student_code]
-    );
+    const studentInfo = await checkClassLeaderRoleByStudentCode(student_code);
 
-    if (result.rows.length === 0) {
+    if (!studentInfo) {
       return res.status(404).json({ error: 'Không tìm thấy sinh viên' });
     }
 
-    const student = result.rows[0];
-    res.json({ 
-      is_class_leader: student.is_class_leader,
-      class_code: student.class_code,
-      class_name: student.class_name
+    res.json({
+      is_class_leader: studentInfo.is_class_leader,
+      class_code: studentInfo.class_code,
+      class_name: studentInfo.class_name
     });
 
   } catch (error) {
