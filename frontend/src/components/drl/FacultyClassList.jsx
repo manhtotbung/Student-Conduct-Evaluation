@@ -231,9 +231,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                   <tr key={c.student_code}>
                     <td>{c.student_code}</td>
                     <td>{c.full_name}</td>
-                    <td>
-                      {c.class_name}
-                    </td>
+                    <td>{c.class_name}</td>
                     <td className='text-center'>{c.teacher_score || 0}</td>
                     <td className='text-center'>{c.faculty_score || c.teacher_score || 0}</td>
                     <td className="text-end">
@@ -242,7 +240,6 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                         variant='success'
                         className="btn-main"
                         onClick={() => setSelectedStudent({ code: c.student_code })}
-                        disabled={c.is_faculty_approved === true} //nếu khoa đã duyệt thì không cho sửa
                       >
                         {user?.role === 'faculty' && lockedClasses[c.class_name] ? 'Xem' : 'Xem/Sửa'}
                       </Button>
