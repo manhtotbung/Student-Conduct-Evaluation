@@ -12,7 +12,8 @@ export const listStudentsByFacultyAndTerm = async (faculty_id, term) => {
       COALESCE(ah_teacher.total_score, 0)::int AS teacher_score,
       ah_faculty.total_score::int AS faculty_score,
       ah_faculty.note,
-      COALESCE(st.is_faculty_approved, false) as is_faculty_approved
+      COALESCE(st.is_faculty_approved, false) as is_faculty_approved,
+      COALESCE(st.is_teacher_approved, false) as is_teacher_approved
     FROM ref.classes c
     JOIN ref.students s ON s.class_id = c.id
     LEFT JOIN drl.class_term_status st ON c.id = st.class_id AND st.term_code = $2
@@ -21,7 +22,7 @@ export const listStudentsByFacultyAndTerm = async (faculty_id, term) => {
     LEFT JOIN drl.assessment_history ah_faculty 
       ON ah_faculty.student_id = s.id AND ah_faculty.term_code = $2 AND ah_faculty.role = 'faculty'
     WHERE c.faculty_id = $1
-      AND COALESCE(st.is_teacher_approved, false) = true
+     AND COALESCE(st.is_teacher_approved, false) = true
     ORDER BY c.name, s.student_code
     `,
     [faculty_id, term]
@@ -49,6 +50,7 @@ export const checkEditAccess = async (student_code, faculty_id, term_code) => {
 // Khoa duyệt bảng điểm của một lớp
 export const approveClassByFaculty = async (class_code, faculty_id, term, user_id) => {
   return withTransaction(async (client) => {
+    
     //Lấy thông tin lớp và trạng thái hiện tại 
     const { rows } = await client.query(
       `SELECT 
@@ -67,10 +69,11 @@ export const approveClassByFaculty = async (class_code, faculty_id, term, user_i
 
     const { class_id, is_teacher_approved, is_faculty_approved } = rows[0];
 
-    if (!is_teacher_approved) throw new Error('TEACHER_NOT_APPROVED_YET');
+    if (is_faculty_approved) throw new Error('FACULTY_ALREADY_APPROVED');
+    if (!is_teacher_approved) throw new Error('TEACHER_MUST_APPROVE_FIRST');
 
     // Sao chép tổng điểm giáo viên sang điểm khoa nếu khoa chưa có dữ liệu đánh giá
-    await client.query(
+    await client.query( 
       `INSERT INTO drl.assessment_history (student_id, term_code, role, total_score, changed_by, created_at, updated_at)
        SELECT 
          ah_teacher.student_id,
@@ -85,6 +88,7 @@ export const approveClassByFaculty = async (class_code, faculty_id, term, user_i
        WHERE s.class_id = $1
          AND ah_teacher.term_code = $2
          AND ah_teacher.role = 'teacher'
+         --ktra faculty duyệt chưa(role =faculty), nếu k tồn tại thì trả về true
          AND NOT EXISTS (
            SELECT 1 FROM drl.assessment_history ah_faculty
            WHERE ah_faculty.student_id = ah_teacher.student_id
@@ -94,8 +98,6 @@ export const approveClassByFaculty = async (class_code, faculty_id, term, user_i
       [class_id, term, user_id]
     );
 
-    if (!is_teacher_approved) throw new Error('TEACHER_NOT_APPROVED_YET');
-    if (is_faculty_approved) throw new Error('FACULTY_ALREADY_APPROVED');
     //Cập nhật trạng thái duyệt của khoa
     await client.query(
       `INSERT INTO drl.class_term_status (class_id, term_code, is_faculty_approved, faculty_approved_at, updated_at)
@@ -105,16 +107,4 @@ export const approveClassByFaculty = async (class_code, faculty_id, term, user_i
       [class_id, term]
     );
   });
-};
-
-// Kiểm tra xem khoa đã duyệt chưa
-export const checkFacultyLocked = async (faculty_id, class_code, term) => {
-  const res = await pool.query(
-    `SELECT COALESCE(st.is_faculty_approved, false) as is_faculty_approved
-     FROM ref.classes c
-     LEFT JOIN drl.class_term_status st ON c.id = st.class_id AND st.term_code = $3
-     WHERE c.name = $1 AND c.faculty_id = $2`,
-    [class_code, faculty_id, term]
-  );
-  return res.rowCount > 0 && res.rows[0].is_faculty_approved === true;
 };
