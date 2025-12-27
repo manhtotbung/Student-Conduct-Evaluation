@@ -51,12 +51,12 @@ export const postAccept = async (teacherId, term, user_id) => {
       throw error;
     }
 
-    const studentAss = await getStudents(teacherId, term, client);
+    const leaderAss = await getStudents(teacherId, term, client);
 
-    for (const student of studentAss) {
+    for (const student of leaderAss) {
       const totalScore = student.total_score !== null
         ? student.total_score      // GV đã chấm
-        : student.old_score;       // lấy điểm SV
+        : student.old_score;       // lấy điểm Leader
 
       if (totalScore !== null) {
         await pool.query(`INSERT INTO drl.assessment_history(term_code, student_id, total_score, changed_by, role, updated_at)
@@ -92,7 +92,7 @@ export const postLockAss = async (teacherId, term) => {
 };
 
 //kiem tra khoa 
-const checkTeacherLocked = async (teacherId, term, client = pool) => {
+export const checkTeacherLocked = async (teacherId, term, client = pool) => {
   const rs = await client.query(`
     SELECT cts.is_teacher_approved FROM ref.classes c
     JOIN drl.class_term_status cts  ON c.id = cts.class_id
@@ -100,8 +100,6 @@ const checkTeacherLocked = async (teacherId, term, client = pool) => {
 
   return rs.rowCount > 0 && rs.rows[0].is_teacher_approved === true;
 };
-
-export { checkTeacherLocked };
 
 // Lấy tất cả sinh viên trong lớp (không cần điều kiện đã đánh giá)
 export const getAllStudentsInClass = async (teacherId, term) => {
