@@ -15,11 +15,11 @@ const resolveGroupId = async (groupCode, term_code) => {
 
   // Luôn xử lý groupCode như string, tìm hoặc tạo group theo code
   const { rows } = await pool.query(
-    `INSERT INTO drl.criteria_group (term_code, code, title, max_points)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO drl.criteria_group (term_code, code, title)
+     VALUES ($1, $2, $3)
      ON CONFLICT (term_code, code) DO UPDATE SET code = EXCLUDED.code
      RETURNING id`,
-    [term_code, String(groupCode), `Nhóm ${groupCode}`, 0]
+    [term_code, String(groupCode), `Nhóm ${groupCode}`]
   );
   return rows[0]?.id || null;
 };

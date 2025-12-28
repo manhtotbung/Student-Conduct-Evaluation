@@ -19,7 +19,7 @@ export const getCriteria = async (term) =>{
       --Tách phần số của code để sắp xếp
       nullif(regexp_replace(split_part(c.code, '.', 1), '\\D', '', 'g'), '')::int as grp_order,
       nullif(regexp_replace(split_part(c.code, '.', 2), '\\D', '', 'g'), '')::int as sub_order
-    from drl.criterion c inner join drl.criteria_group cg
+    from drl.criterion c left join drl.criteria_group cg
     on c.group_id = cg.id
     where c.term_code = $1
     order by grp_order nulls last, sub_order nulls last, c.id;

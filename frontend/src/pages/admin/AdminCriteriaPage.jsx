@@ -111,12 +111,12 @@ const AdminCriteriaPage = () => {
 
   // --- Lọc danh sách tiêu chí hiển thị bên trái ---
   const filteredCriteria = useMemo(() => {
-    if (!filterGroup) {
-      return allCriteria.filter(c => String(c.code || '').includes('.'));
-    }
-    return allCriteria.filter(c => String(c.code || '').startsWith(`${filterGroup}.`));
-  }, [allCriteria, filterGroup]);
-
+  if (!filterGroup) {
+    return allCriteria.filter(c => String(c.code || '').includes('.'));
+  }
+  // Filter theo group_code thay vì code để hỗ trợ cả format cũ (1.1, 2.1) và mới (G1.1)
+  return allCriteria.filter(c => String(c.group_code || '').toUpperCase() === String(filterGroup).toUpperCase());
+}, [allCriteria, filterGroup]);
   // --- Chọn một tiêu chí từ danh sách để sửa ---
   const selectCriterion = (crit) => {
     // Lấy group_code từ group_code trả về từ API
