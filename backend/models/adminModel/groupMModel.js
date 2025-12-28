@@ -9,8 +9,8 @@ export const getGroupCri = async (term) =>{
 
 //123 Tạo mới nhóm tiêu chí
 export const postGroupCri = async(term_code, code, title)=>{
-  const query = `insert into drl.criteria_group (term_code, code, title)
-                    values ($1,$2,$3)
+  const query = `insert into drl.criteria_group (term_code, code, title, max_points)
+                    values ($1,$2,$3,0)
                     returning *`;
   const {rows} = await pool.query(query,[term_code, code, title]);
   return rows;
