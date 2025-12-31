@@ -147,10 +147,20 @@ export const copyCriteriaFromTerm = async (req, res) => {
   }
 
   try {
-    //Kiểm tra kì mới đã có dữ liệu chưa
-    await checkCopyCriteria(targetTermCode);
+    // Kiểm tra kì mới đã có dữ liệu chưa
+    try {
+      await checkCopyCriteria(targetTermCode);
+    } catch (err) {
+      if (err && err.status === 400 && err.message) {
+        console.warn("[copyCriteriaFromTerm] Kỳ đích đã có dữ liệu:", err.message);
+        return res.status(400).json({ error: err.message });
+      }
+      // Các lỗi khác
+      console.error("[copyCriteriaFromTerm] Lỗi kiểm tra kỳ đích:", err);
+      return res.status(500).json({ error: "Lỗi kiểm tra kỳ đích" });
+    }
 
-    //Sao chép dữ liệu
+    // Sao chép dữ liệu
     await copyCriteria(sourceTermCode, targetTermCode);
     res.json({ ok: true });
   } catch (error) {
