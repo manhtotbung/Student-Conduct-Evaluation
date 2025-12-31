@@ -56,85 +56,16 @@ export const updateCriterion = async (id, term_code, code, title, type, max_poin
 
 // Xóa tiêu chí 
 export const deleteCriterion = async (id) => {
-  return withTransaction(async (client) => {
-    // Set option_id = NULL trong self_assessment trước
-    await client.query(
-      `UPDATE drl.self_assessment SET option_id = NULL 
-       WHERE option_id IN (SELECT id FROM drl.criterion_option WHERE criterion_id = $1)`,
-      [id]
-    );
-
-    // Xóa criterion_option trước (foreign key constraint)
-    await client.query(
-      `DELETE FROM drl.criterion_option WHERE criterion_id = $1`,
-      [id]
-    );
-
-    // Xóa criterion
-    const { rows } = await client.query(
-      `DELETE FROM drl.criterion WHERE id = $1 RETURNING id`,
-      [id]
-    );
-    if (rows.length === 0) throw new Error("Không tìm thấy tiêu chí");
-    return rows[0];
-  });
+  const { rows } = await pool.query(
+    `DELETE FROM drl.criterion WHERE id = $1 RETURNING id`,
+    [id]
+  );
+  if (rows.length === 0) throw new Error("Không tìm thấy tiêu chí");
+  return rows[0];
 };
 
 //Cập nhật options của tiêu chí
 export const updateCriterionOptions = async (criterion_id, options) => {
-  return withTransaction(async (client) => {
-    const criterion = await queryCriterion(criterion_id, 'type');
-    if (!criterion) throw new Error("Không tìm thấy tiêu chí");
-    if (criterion.type !== "radio") throw new Error("Tiêu chí không phải là radio");
-
-    // Set option_id = NULL trong self_assessment trước khi xóa options
-    await client.query(
-      `UPDATE drl.self_assessment SET option_id = NULL 
-       WHERE option_id IN (SELECT id FROM drl.criterion_option WHERE criterion_id = $1)`,
-      [criterion_id]
-    );
-
-    // Xóa options cũ
-    await client.query(
-      `DELETE FROM drl.criterion_option WHERE criterion_id = $1`, 
-      [criterion_id]
-    );
-    
-    // Insert new options
-    if (!options || options.length === 0) return { ok: true, options: [] };
-    
-    // Lọc options hợp lệ (có label)
-    const validOptions = options
-      .map(opt => ({
-        label: (opt.label || "").trim(),
-        score: toNum(opt.score) || 0
-      }))
-      .filter(opt => opt.label); //only giữ label ko rỗng
-
-    if (validOptions.length === 0) return { ok: true, options: [] };
-
-    // Tạo VALUES string và params array cho batch insert
-    const values = [];
-    const params = [criterion_id]; // $1 = criterion_id (dùng chung cho tất cả)
-    
-    validOptions.forEach((opt, index) => {
-      const labelParam = index * 2 + 2;  // $2, $4, $6, ...
-      const scoreParam = index * 2 + 3;  // $3, $5, $7, ...
-      
-      values.push(`($1, $${labelParam}, $${scoreParam})`);
-      //$1 là criterion_id, $ còn lại là vị trí của label và score vì option là mảng
-      params.push(opt.label, opt.score);
-    });
-
-    // INSERT tất cả options trong 1 query
-    const { rows } = await client.query(
-      `INSERT INTO drl.criterion_option (criterion_id, label, score) 
-       VALUES ${values.join(', ')} RETURNING *`,
-      params
-    );
-
-    return { ok: true, options: rows };
-  });
 };
 
 //Kiểm tra dữ liệu
@@ -142,6 +73,7 @@ export const checkdeleteAllCriteria = async (term_code) => {
   const result = await pool.query(`select 1 from  drl.self_assessment where term_code = $1 limit 1`,[term_code]);
   return result.rowCount > 0;
 };
+
 //Xóa tất cả tiêu chí
 export const deleteAllCriteria = async (term_code) => {
   //Xóa lựa chọn 
@@ -159,6 +91,7 @@ export const checkCopyCriteria = async (targetTermCode) => {
 
   return true;
 };
+
 // Sao chep tieu chi
 export const copyCriteria = async (sourceTermCode, targetTermCode) => {
   return withTransaction(async (client) => {
