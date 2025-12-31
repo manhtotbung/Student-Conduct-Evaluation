@@ -44,17 +44,20 @@ export const createCriterion = async (term_code, code, title, type, max_points, 
 
 // Cập nhật tiêu chí 
 export const updateCriterion = async (id, term_code, code, title, type, max_points, group_id, requires_evidence = false) => {
+  // Kiểm tra tồn tại
   const existing = await queryCriterion(id, 'term_code');
-  if (!existing) throw new Error("Không tìm thấy tiêu chí");
+    if (!existing) {  
+    err.code = "CRITERION_NOT_FOUND";
+    throw err;
+  }
   
   // Kiểm tra trùng mã code
   const exists = await isCriterionCodeExists(term_code, code, id);
-  if (exists) {
-    const err = new Error("Mã tiêu chí đã tồn tại!");
+  if (exists) {  
     err.code = "CRITERION_CODE_EXISTS";
     throw err;
   }
-
+//update
   const { rows } = await pool.query(
     `UPDATE drl.criterion 
      SET code=$1, title=$2, type=$3, max_points=$4, group_id=$5, requires_evidence=$6 
@@ -71,7 +74,10 @@ export const deleteCriterion = async (id) => {
     `DELETE FROM drl.criterion WHERE id = $1 RETURNING id`,
     [id]
   );
-  if (rows.length === 0) throw new Error("Không tìm thấy tiêu chí");
+  if (rows.length === 0) {
+    err.code = "DELETE_FAIL"; 
+    throw err;
+  }
   return rows[0];
 };
 
@@ -79,8 +85,14 @@ export const deleteCriterion = async (id) => {
 export const updateCriterionOptions = async (criterion_id, options) => {
   return withTransaction(async (client) => {
     const criterion = await queryCriterion(criterion_id, 'type');
-    if (!criterion) throw new Error("Không tìm thấy tiêu chí");
-    if (criterion.type !== "radio") throw new Error("Tiêu chí không phải là radio");
+    if (!criterion) {
+      err.code = "CRITERION_NOT_FOUND";
+      throw err;
+    }
+    if (criterion.type !== "radio") {
+      err.code = "CRITERION_NOT_RADIO";
+      throw err;
+    }
 
     // Xóa options cũ (CASCADE set option_id = NULL trong self_assessment)
     await client.query(
@@ -125,16 +137,15 @@ export const updateCriterionOptions = async (criterion_id, options) => {
   });
 };
 
-
 //Kiểm tra dữ liệu
-export const checkdeleteAllCriteria = async (term_code) => {
+export const checkStudentAssess = async (term_code) => {
   const result = await pool.query(`select 1 from  drl.self_assessment where term_code = $1 limit 1`,[term_code]);
   return result.rowCount > 0;
 };
 
 //Xóa tất cả tiêu chí
 export const deleteAllCriteria = async (term_code) => {
-  //cascade sẽ xóa các tiêu chí con và các dữ liệu liên quan
+  //cascade xóa các tiêu chí con và các dữ liệu liên quan
   await pool.query(`DELETE FROM drl.criteria_group WHERE term_code = $1`, [term_code]);
   return true;
 };
