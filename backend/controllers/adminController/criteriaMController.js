@@ -88,18 +88,17 @@ export const updateCriterion = async (req, res, next) => {
 // Xóa tiêu chí
 export const deleteCriterion = async (req, res, next) => {
   const { id, termCode } = req.params;
-  //kiểm tra đã có sinh viên đánh giá chưa
-  const check = await checkStudentAssess(termCode);
-    if (check) {
-      return res.status(400).json({
-        ok: false,
-        message: "Không thể xóa vì đã được sinh viên đánh giá",
-      });
-    }
-  if (!id) {
-    return res.status(400).json({ error: "Thiếu ID tiêu chí" });
+  if (!id || !termCode) {
+    return res.status(400).json({ error: "Thiếu ID hoặc mã kỳ học" });
   }
-
+  // kiểm tra đã có sinh viên đánh giá chưa
+  const check = await checkStudentAssess(termCode);
+  if (check) {
+    return res.status(400).json({
+      ok: false,
+      message: "Không thể xóa vì đã được sinh viên đánh giá",
+    });
+  }
   try {
     await deleteCriterionModel(id);
     res.json({ ok: true, message: "Xóa thành công" });

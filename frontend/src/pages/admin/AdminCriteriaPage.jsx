@@ -344,7 +344,7 @@ const AdminCriteriaPage = () => {
     }
     setIsSaving(true);
     try {
-      await deleteCriterion(id);
+      await deleteCriterion(id, currentCriterion.term_code);
       notify('Đã xóa tiêu chí!', 'info');
       setCurrentCriterion(null);
       await fetchData();
