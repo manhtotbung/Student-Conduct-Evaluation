@@ -166,7 +166,8 @@ const ClassLeaderPage = () => {
                     variant="success"
                     onClick={() => setSelectedStudent({
                       studentCode: student.student_code,
-                      studentName: student.name
+                      studentName: student.name,
+                      note: student.note
                     })}
                   >
                     Xem
@@ -194,6 +195,7 @@ const ClassLeaderPage = () => {
         <StudentAssessmentModal
           studentCode={selectedStudent.studentCode}
           studentName={selectedStudent.studentName}
+          noted={selectedStudent.note}
           term={term}
           onClose={handleModalClose}
           page="class_leader"

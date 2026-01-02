@@ -4,13 +4,20 @@ import { withTransaction } from '../utils/helpers.js';
 //Hiển thị danh sách sinh viên trong lớp 
 
 export const getStudents = async (teacherId, term, client = pool) => {
-  const query = `SELECT s.id, s.student_code,s.name as full_name, ah.total_score, ahSV.total_score as old_score, ah.note
+  const query = `SELECT 
+      s.id, 
+      s.student_code,
+      s.name as full_name, 
+      s.is_class_leader,
+      c.class_code,
+      ah.total_score, 
+      ahSV.total_score as old_score, 
+      ah.note
       FROM ref.classes c
       JOIN ref.students s ON s.class_id = c.id
       LEFT JOIN drl.assessment_history ahSV ON ahSV.student_id = s.id AND ahSV.term_code = $2 and ahSV.role ='leader'
       LEFT JOIN drl.assessment_history ah ON ah.student_id = s.id AND ah.term_code = $2 and ah.role ='teacher'
       WHERE c.teacher_id = $1
-        AND ahSV.total_score IS NOT NULL
       ORDER BY c.name, s.student_code`;
 
   const { rows } = await client.query(query, [teacherId, term]);
@@ -55,20 +62,21 @@ export const postAccept = async (teacherId, term, user_id) => {
     const leaderAss = await getStudents(teacherId, term, client);
 
     for (const student of leaderAss) {
+      // Nếu GV đã chấm -> lấy điểm GV
+      // Nếu GV chưa chấm -> lấy điểm Leader (old_score)
+      // Nếu cả 2 đều chưa -> mặc định 0
       const totalScore = student.total_score !== null
         ? student.total_score      // GV đã chấm
-        : student.old_score;       // lấy điểm Leader
+        : (student.old_score !== null ? student.old_score : 0);  // lấy điểm Leader hoặc 0
 
-      if (totalScore !== null) {
-        await pool.query(`INSERT INTO drl.assessment_history(term_code, student_id, total_score, changed_by, role, updated_at)
-        VALUES ($1, $2, $3, $4, 'teacher', now())
-        ON CONFLICT (student_id, term_code, role)
-        DO UPDATE SET
-          total_score = EXCLUDED.total_score,
-          changed_by  = EXCLUDED.changed_by,
-          updated_at  = now()`, 
-        [term, student.id, totalScore, user_id]);
-      }
+      await client.query(`INSERT INTO drl.assessment_history(term_code, student_id, total_score, changed_by, role, updated_at)
+      VALUES ($1, $2, $3, $4, 'teacher', now())
+      ON CONFLICT (student_id, term_code, role)
+      DO UPDATE SET
+        total_score = EXCLUDED.total_score,
+        changed_by  = EXCLUDED.changed_by,
+        updated_at  = now()`, 
+      [term, student.id, totalScore, user_id]);
     }
   });
 };

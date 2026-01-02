@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { reportFaculty } from "../models/reportModel.js";
+import { reportFaculty, reportTeacher } from "../models/reportModel.js";
 
 export const previewTemplateExcel = async (req, res) =>{
     const {term_code,faculty_code} = req.query;
@@ -120,6 +120,164 @@ export const exportTemplateExcel = async (req, res) => {
         
     } catch (error) {
         console.error(error);
+        res.status(500).send("Lỗi khi tạo file Excel");
+    }
+};
+
+export const previewTeacherExcel = async (req, res) => {
+    const { term_code, teacher_id } = req.query;
+    console.log("term_code:", term_code, "teacher_id:", teacher_id);
+
+    if (!term_code || !teacher_id) return res.status(400).send("Thiếu dữ liệu đầu vào: term_code hoặc teacher_id");
+
+    try {
+        const data = await reportTeacher(term_code, teacher_id);
+
+        if (data.length === 0) {
+            return res.status(404).send();
+        }
+
+        return res.json({
+            title: `TỔNG HỢP KQRL HK ${data[0].semester} NĂM ${data[0].year} - ${data[0].year + 1}`,
+            classInfo: `Lớp: ${data[0].class_name} - Khoa: ${data[0].faculty_name}`,
+            columns: ["TT", "Mã SV", "Họ và tên", "Lớp", "Khoa", "Khoa", "TC1", "TC2", "TC3", "TC4", "TC5", "Tổng điểm", "Điểm LCD, Tổ CTSV kiểm tra", "Phân loại"],
+            rows: data.map((item, index) => ({
+                tt: index + 1,
+                student_code: item.student_code,
+                full_name: item.full_name,
+                class_code: item.class_code,
+                faculty: item.faculty_name,
+                faculty2: "",
+                tc1: "",
+                tc2: "",
+                tc3: "",
+                tc4: "",
+                tc5: "",
+                total_score: item.total_score,
+                lcd: "",
+                rank: item.rank
+            }))
+        });
+    } catch (error) {
+        console.error("Lỗi ở previewTeacherExcel", error);
+        res.status(500).send("Lỗi hệ thống");
+    }
+};
+
+export const exportTeacherExcel = async (req, res) => {
+    const { term_code, teacher_id } = req.query;
+    if (!term_code || !teacher_id) return res.status(400).send("Thiếu dữ liệu đầu vào: term_code hoặc teacher_id");
+
+    try {
+        const data = await reportTeacher(term_code, teacher_id);
+        
+        if (data.length === 0) {
+            return res.status(404).send("Không có dữ liệu");
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Báo cáo");
+
+        const border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" }
+        };
+
+        const center = { vertical: "middle", horizontal: "center" };
+
+        // Header
+        sheet.mergeCells("A1:N1");
+        sheet.getCell("A1").value = `TỔNG HỢP KQRL SINH VIÊN HỌC KỲ ${data[0].semester} NĂM HỌC ${data[0].year} - ${data[0].year + 1}`;
+        sheet.getCell("A1").font = { size: 14, bold: true };
+        sheet.getCell("A1").alignment = center;
+
+        sheet.mergeCells("A2:N2");
+        sheet.getCell("A2").value = "(Mẫu dùng cho lớp)";
+        sheet.getCell("A2").alignment = center;
+
+        sheet.mergeCells("A3:N3");
+        sheet.getCell("A3").value = `Lớp: ${data[0].class_name}  Khoa: ${data[0].faculty_name}`;
+        sheet.getCell("A3").alignment = { horizontal: "left" };
+
+        // Column headers
+        sheet.getRow(5).values = [
+            "TT",
+            "Mã SV",
+            "Họ và tên",
+            "Lớp",
+            "Khoa",
+            "Khoa",
+            "TC1",
+            "TC2",
+            "TC3",
+            "TC4",
+            "TC5",
+            "Tổng điểm",
+            "Điểm LCD, Tổ CTSV kiểm tra",
+            "Phân loại"
+        ];
+
+        sheet.columns = [
+            { key: "tt", width: 5 },
+            { key: "masv", width: 12 },
+            { key: "hoten", width: 25 },
+            { key: "lop", width: 12 },
+            { key: "khoa", width: 10 },
+            { key: "khoa2", width: 10 },
+            { key: "tc1", width: 8 },
+            { key: "tc2", width: 8 },
+            { key: "tc3", width: 8 },
+            { key: "tc4", width: 8 },
+            { key: "tc5", width: 8 },
+            { key: "tongdiem", width: 12 },
+            { key: "lcd", width: 15 },
+            { key: "phanloai", width: 12 }
+        ];
+
+        sheet.getRow(5).font = { bold: true };
+        sheet.getRow(5).alignment = center;
+        sheet.getRow(5).eachCell(cell => (cell.border = border));
+
+        // Data rows
+        data.forEach((item, index) => {
+            const row = sheet.addRow([
+                index + 1,
+                item.student_code,
+                item.full_name,
+                item.class_code,
+                item.faculty_name,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                item.total_score,
+                "",
+                item.rank
+            ]);
+
+            row.eachCell(cell => {
+                cell.border = border;
+            });
+        });
+
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename=Bao_cao_lop_${data[0].class_code}.xlsx`
+        );
+
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error) {
+        console.error("Lỗi exportTeacherExcel:", error);
         res.status(500).send("Lỗi khi tạo file Excel");
     }
 };
