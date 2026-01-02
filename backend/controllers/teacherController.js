@@ -1,4 +1,4 @@
-import { getStudents, getStudentsNot,postLockAss,postStudentAllNotAssessment , getAllStudentsInClass, postAccept,checkTeacherLocked} from '../models/teacherModel.js';
+import { getStudents,postLockAss, getAllStudentsInClass, postAccept,checkTeacherLocked} from '../models/teacherModel.js';
 
 export const getAllStudents = async (req, res) => {
   const teacher_id = req.user?.teacher_id; // Lấy teacher_id từ req.user (authMiddleware hàm protectedRoute)
@@ -13,39 +13,6 @@ export const getAllStudents = async (req, res) => {
     res.status(500).send({message: "Lỗi hệ thống"});
   }
 };
-
-export const getAllStudentsNot = async (req,res) => {
-  const teacher_id = req.user?.teacher_id;
-  const {term} = req.query || {};
-  if (!teacher_id || !term) return res.status(400).json({ error: 'Thiếu thông tin!' });
-
-  try {
-    const rows = await getStudentsNot(teacher_id, term);
-    res.json(rows);
-  } catch (error) {
-    console.error('Lỗi ở getStudent', error);
-    res.status(500).send({message: "Lỗi hệ thống"});
-  }
-};
-
-//Tự đánh giá cho sinh viên
-export const postStudentNotAss = async (req,res) => {
-  const teacher_id = req.user?.teacher_id; 
-  const { term } = req.query || {};
-  const { user_id } = req.user;
-  if (!teacher_id || !term) {
-    return res.status(400).json({ error: 'Thiếu dữ liệu đầu vào' });
-  }
-  
-  try {
-    const result = await postStudentAllNotAssessment (teacher_id, term, user_id);
-    res.json(result);
-  } catch (error) {
-    console.error('Lỗi postStudentNotAss (teacher)', error);
-    res.status(500).json({ message: 'Lỗi hệ thống' });
-  }
-};
-
 
 
 // Lấy tất cả sinh viên trong lớp (cho chức năng chọn lớp trưởng)

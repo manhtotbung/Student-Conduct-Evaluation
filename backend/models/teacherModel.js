@@ -24,32 +24,6 @@ export const getStudents = async (teacherId, term, client = pool) => {
   return rows;
 };
 
-export const getStudentsNot = async (teacherId, term, client = pool) => {
-  const query = `
-    SELECT s.id, s.student_code, s.name as full_name, c.class_code
-    FROM ref.classes c
-    JOIN ref.students s ON s.class_id = c.id
-    LEFT JOIN drl.assessment_history ahSV ON ahSV.student_id = s.id AND ahSV.term_code = $2 and ahSV.role ='student'
-    LEFT JOIN drl.assessment_history ah ON ah.student_id = s.id AND ah.term_code = $2 and ah.role ='teacher'
-    WHERE c.teacher_id = $1 AND ah.total_score IS NULL
-    ORDER BY c.name, s.student_code`;
-  const { rows } = await client.query(query, [teacherId, term]);
-  return rows;
-};
-
-export const postStudentAllNotAssessment = async (teacherId, term, user_id) => {
-  return withTransaction(async (client) => {
-    const allStudentNot = await getStudentsNot(teacherId, term, client);
-
-    for (const student of allStudentNot) {
-      await client.query(`INSERT INTO drl.assessment_history (term_code, student_id, total_score, changed_by, role, note, updated_at)
-        VALUES ($1, $2, 0, $3,'teacher', 'SV chưa đánh giá', now()) `,
-        [term, student.id, user_id]);
-    }
-    return { count: allStudentNot.length };
-  });
-};
-
 export const postAccept = async (teacherId, term, user_id) => {
   return withTransaction(async (client) => {
     const Lock = await checkTeacherLocked(teacherId, term, client);
