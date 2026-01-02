@@ -1,6 +1,6 @@
 import express from "express";
 import {getCriteriaController,getSelfAssessment,saveSelfAssessment,getStudentHistory,getAssessmentNotesController,} from "../controllers/drlController.js";
-import { previewTemplateExcel,exportTemplateExcel } from '../controllers/reportController.js';
+import { previewTemplateExcel, exportTemplateExcel, previewTeacherExcel, exportTeacherExcel } from '../controllers/reportController.js';
 import { uploadEvidence, getEvidenceByAssessment, deleteEvidence, serveEvidence } from '../controllers/evidenceController.js';
 import upload from '../middlewares/uploadMiddleware.js';
 
@@ -35,5 +35,9 @@ router.get("/evidence/file/:filename", serveEvidence);
 // Export Excel Template - không cần requireRole vì đã có protectedRoute
 router.get("/excel-preview", previewTemplateExcel);
 router.get("/excel-template", exportTemplateExcel);
+
+// Export Excel for Teacher (Class Report)
+router.get("/teacher-excel-preview", previewTeacherExcel);
+router.get("/teacher-excel-template", exportTeacherExcel);
 
 export default router;

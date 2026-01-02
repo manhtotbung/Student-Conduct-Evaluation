@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Table, Alert, Button, Form } from 'react-bootstrap'; // Import components
-import { getAdminClassStudents, getFacultyClassStudents, getTeacherStudents, getTeacherStudentsUnRated, postAllStudentsScoreToZero, postAccept, getTeacherLockStatus } from '../../services/drlService';
+import { Card, Table, Alert, Button, Form, Modal } from 'react-bootstrap';
+import { getAdminClassStudents, getFacultyClassStudents, getTeacherStudents, postAccept, getTeacherLockStatus } from '../../services/drlService';
 import LoadingSpinner from '../common/LoadingSpinner';
 import StudentAssessmentModal from './StudentAssessmentModal';
 import useAuth from '../../hooks/useAuth';
+import axios from 'axios';
 
 
-const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, resetSl, setClassCode, onStudentsLoaded, page }) => {
+const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStudentsLoaded, page }) => {
   const { user } = useAuth();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +15,10 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [formData, setFormData] = useState({ msv: '', name: '' });
   const [isLocked, setIsLocked] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -33,11 +38,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
 
       else if (user?.role === 'teacher') {
         if (!term) return console.log("thiếu dữ liệu!");
-        else if (isRated) res = await getTeacherStudents(user.username, term);
-        else res = await getTeacherStudentsUnRated(user.username, term)
-        if (select) {
-          await postAllStudentsScoreToZero(user.username, term)
-        }
+        res = await getTeacherStudents(user.username, term);
         setClassCode(res[0]?.class_code || null);
       }
 
@@ -51,10 +52,9 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
       setError(e.message);
     } finally {
       setLoading(false);
-      if (select) resetSl()
     }
 
-  }, [classCode, term, user?.role, user?.username, onListLoaded, onStudentsLoaded, isRated, select, resetSl]);
+  }, [classCode, term, user?.role, user?.username, onListLoaded, onStudentsLoaded]);
 
   useEffect(() => {
     fetchData();
@@ -112,6 +112,64 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
     return msvMatch && nameMatch;
   });
 
+  const previewTemplate = async () => {
+    try {
+      const res = await axios.get(
+        `${API_BASE}/api/drl/teacher-excel-preview?term_code=${encodeURIComponent(term)}&teacher_id=${encodeURIComponent(user.teacher_id)}`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${JSON.parse(localStorage.getItem("auth"))?.token || ""}`
+          }
+        }
+      );
+
+      setPreview(res.data);
+      setIsPreviewOpen(true);
+    } catch (err) {
+      console.error("Lỗi preview:", err);
+      if (err.response?.status === 404) {
+        alert("Chưa có dữ liệu đánh giá cho kỳ học này.");
+      } else {
+        alert("Không thể xem trước file. Lỗi: " + (err.message || "Unknown error"));
+      }
+    }
+  };
+
+  const downloadTemplate = async () => {
+    try {
+      const res = await axios.get(
+        `${API_BASE}/api/drl/teacher-excel-template?term_code=${encodeURIComponent(term)}&teacher_id=${encodeURIComponent(user.teacher_id)}`,
+        {
+          responseType: 'blob',
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${JSON.parse(localStorage.getItem('auth'))?.token || ''}`
+          }
+        }
+      );
+
+      const blob = res.data;
+
+      if (res.status !== 200) {
+        throw new Error(`Tải file thất bại. Status: ${res.status}`);
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bao_cao_lop_${classCode}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Lỗi tải:", error.message || error);
+      alert(error.message || "Đã xảy ra lỗi trong quá trình tải file.");
+    }
+  };
+
   const renderContent = () => {
     if (loading) return <LoadingSpinner />;
     // Dùng Alert variant="danger"
@@ -146,7 +204,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
               <td>{s.student_code}</td>
               <td>{s.full_name}</td>
               <td className="text-center">{s.old_score ?? 0}</td>
-              <td className="text-center">{s.total_score || s.old_score || 0}</td>
+              <td className="text-center">{s.total_score ?? (s.old_score ?? 0)}</td>
               <td className="text-end">
                 {/* Dùng Button variant="outline-primary" size="sm" */}
                 <Button
@@ -176,9 +234,14 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
       </Card>
 
       {page === 'teacher' && (
-        <div className="d-flex justify-content-end">
+        <div className="d-flex mt-3" style={{ justifyContent: "space-between" }}>
+          <Button onClick={previewTemplate} variant="outline-success">
+            <i className="fa-regular fa-file-excel m-2"></i>
+            Xuất Excel
+          </Button>
+
           <Button
-            className="btn-main mt-3"
+            className="btn-main"
             variant={isLocked ? 'secondary' : 'success'}
             size="sm"
             onClick={handleApprove}
@@ -199,6 +262,58 @@ const ClassStudentList = ({ classCode, term, onListLoaded, isRated, select, rese
           isLocked={page === 'teacher' && isLocked}
         />
       )}
+
+      <Modal show={isPreviewOpen} onHide={() => setIsPreviewOpen(false)} size="xl" scrollable>
+        <Modal.Header closeButton>
+          <Modal.Title>Xem trước file Excel</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {preview && (
+            <>
+              <h5 className="text-center">{preview.title}</h5>
+              <p className="text-center"><em>(Mẫu dùng cho lớp)</em></p>
+              <p>{preview.classInfo}</p>
+              
+              <Table striped bordered hover size="sm">
+                <thead>
+                  <tr>
+                    {preview.columns.map((col, idx) => (
+                      <th key={idx}>{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.rows.map((row, idx) => (
+                    <tr key={idx}>
+                      <td>{row.tt}</td>
+                      <td>{row.student_code}</td>
+                      <td>{row.full_name}</td>
+                      <td>{row.class_code}</td>
+                      <td>{row.faculty}</td>
+                      <td>{row.faculty2}</td>
+                      <td>{row.tc1}</td>
+                      <td>{row.tc2}</td>
+                      <td>{row.tc3}</td>
+                      <td>{row.tc4}</td>
+                      <td>{row.tc5}</td>
+                      <td>{row.total_score}</td>
+                      <td>{row.lcd}</td>
+                      <td>{row.rank}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="success" onClick={downloadTemplate}>
+            Tải file Excel
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

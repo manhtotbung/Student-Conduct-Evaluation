@@ -77,9 +77,12 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
       return;
     }
 
-    if (!window.confirm(`Bạn có chắc muốn duyệt tất cả ${uniqueClasses.length} lớp?`)) {
-      return;
-    }
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn duyệt tất cả ${uniqueClasses.length} lớp?\n\n` +
+      'Sau khi duyệt, bạn sẽ không thể chỉnh sửa hoặc duyệt lại được nữa.'
+    );
+    
+    if (!confirmed) return;
 
     setLoading(true);
     let successCount = 0;
@@ -241,7 +244,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                         size="sm"
                         variant='success'
                         className="btn-main"
-                        onClick={() => setSelectedStudent({ code: c.student_code, className: c.class_name })}
+                        onClick={() => setSelectedStudent({ code: c.student_code, className: c.class_name, note: c.note })}
                       >
                         {user?.role === 'faculty' && lockedClasses[c.class_name] ? 'Xem' : 'Xem/Sửa'}
                       </Button>
@@ -279,6 +282,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
       {selectedStudent && (
         <StudentAssessmentModal
           studentCode={selectedStudent.code}
+          noted={selectedStudent.note}
           term={term}
           onClose={handleModalClose}
           page="faculty"

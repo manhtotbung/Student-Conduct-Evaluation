@@ -2,13 +2,19 @@ import pool from "../db.js";
 import { withTransaction } from '../utils/helpers.js';
 
 export const getStudentClass = async (username, term) => {
-    const query = `SELECT s.id, s.student_code,s.name,ah.total_score AS total_score,ahSV.total_score AS old_score, ah.note 
+    const query = `SELECT 
+        s.id, 
+        s.student_code,
+        s.name,
+        s.is_class_leader,
+        COALESCE(ah.total_score, ahSV.total_score, 0) AS total_score,
+        COALESCE(ahSV.total_score, 0) AS old_score, 
+        ah.note 
 	    FROM ref.students leader
 	    JOIN ref.students s ON s.class_id = leader.class_id
 	    LEFT JOIN drl.assessment_history ahSV ON ahSV.student_id = s.id AND ahSV.term_code = $2 AND ahSV.role = 'student'
 	    LEFT JOIN drl.assessment_history ah ON ah.student_id = s.id AND ah.term_code = $2 AND ah.role = 'leader'
 	    WHERE leader.student_code = $1 AND leader.is_class_leader = true
-	      AND ahSV.total_score IS NOT NULL
 	    ORDER BY s.student_code`;
     const {rows} = await pool.query(query,[username, term]);
     return rows;
