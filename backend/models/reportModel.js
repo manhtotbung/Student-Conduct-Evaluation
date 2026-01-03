@@ -39,6 +39,19 @@ export const reportFaculty = async (term_code, faculty_code) => {
 
 export const reportTeacher = async (term_code, teacher_id) => {
   const query = `
+    WITH group_scores AS (
+      SELECT 
+        sa.student_id,
+        cg.id as group_id,
+        cg.code as group_code,
+        ROW_NUMBER() OVER (PARTITION BY sa.student_id ORDER BY cg.code) as group_order,
+        SUM(sa.self_score) as group_score
+      FROM drl.self_assessment sa
+      JOIN drl.criterion cr ON cr.id = sa.criterion_id
+      JOIN drl.criteria_group cg ON cg.id = cr.group_id
+      WHERE sa.term_code = $1
+      GROUP BY sa.student_id, cg.id, cg.code
+    )
     SELECT 
       s.student_code, 
       s.name as full_name, 
@@ -55,7 +68,12 @@ export const reportTeacher = async (term_code, teacher_id) => {
         ELSE 'Kém'
       END as rank,
       t.semester, 
-      t.year
+      t.year,
+      COALESCE((SELECT group_score FROM group_scores WHERE student_id = s.id AND group_order = 1), 0) as tc1,
+      COALESCE((SELECT group_score FROM group_scores WHERE student_id = s.id AND group_order = 2), 0) as tc2,
+      COALESCE((SELECT group_score FROM group_scores WHERE student_id = s.id AND group_order = 3), 0) as tc3,
+      COALESCE((SELECT group_score FROM group_scores WHERE student_id = s.id AND group_order = 4), 0) as tc4,
+      COALESCE((SELECT group_score FROM group_scores WHERE student_id = s.id AND group_order = 5), 0) as tc5
     FROM ref.classes c
     JOIN ref.students s ON s.class_id = c.id
     JOIN ref.faculties f ON c.faculty_id = f.id

@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import { reportFaculty, reportTeacher } from "../models/reportModel.js";
 
+//Khoa
 export const previewTemplateExcel = async (req, res) =>{
     const {term_code,faculty_code} = req.query;
     console.log("term_code:", term_code, "faculty_code:", faculty_code);
@@ -38,6 +39,7 @@ export const previewTemplateExcel = async (req, res) =>{
 
 };
 
+//Khoa
 export const exportTemplateExcel = async (req, res) => {
     const { term_code, faculty_code } = req.query;
     if (!term_code || !faculty_code)    return res.status(400).send("Thiếu dữ liệu đầu vào: term_code hoặc faculty_code");
@@ -124,6 +126,7 @@ export const exportTemplateExcel = async (req, res) => {
     }
 };
 
+//GV
 export const previewTeacherExcel = async (req, res) => {
     const { term_code, teacher_id } = req.query;
     console.log("term_code:", term_code, "teacher_id:", teacher_id);
@@ -140,7 +143,7 @@ export const previewTeacherExcel = async (req, res) => {
         return res.json({
             title: `TỔNG HỢP KQRL HK ${data[0].semester} NĂM ${data[0].year} - ${data[0].year + 1}`,
             classInfo: `Lớp: ${data[0].class_name} - Khoa: ${data[0].faculty_name}`,
-            columns: ["TT", "Mã SV", "Họ và tên", "Lớp", "Khoa", "Khoa", "TC1", "TC2", "TC3", "TC4", "TC5", "Tổng điểm", "Điểm LCD, Tổ CTSV kiểm tra", "Phân loại"],
+            columns: ["TT", "Mã SV", "Họ và tên", "Lớp", "Khoa", "Khóa", "TC1", "TC2", "TC3", "TC4", "TC5", "Tổng điểm", "Điểm LCD, Tổ CTSV kiểm tra", "Phân loại"],
             rows: data.map((item, index) => ({
                 tt: index + 1,
                 student_code: item.student_code,
@@ -148,11 +151,11 @@ export const previewTeacherExcel = async (req, res) => {
                 class_code: item.class_code,
                 faculty: item.faculty_name,
                 faculty2: "",
-                tc1: "",
-                tc2: "",
-                tc3: "",
-                tc4: "",
-                tc5: "",
+                tc1: item.tc1 || 0,
+                tc2: item.tc2 || 0,
+                tc3: item.tc3 || 0,
+                tc4: item.tc4 || 0,
+                tc5: item.tc5 || 0,
                 total_score: item.total_score,
                 lcd: "",
                 rank: item.rank
@@ -164,6 +167,7 @@ export const previewTeacherExcel = async (req, res) => {
     }
 };
 
+//GV
 export const exportTeacherExcel = async (req, res) => {
     const { term_code, teacher_id } = req.query;
     if (!term_code || !teacher_id) return res.status(400).send("Thiếu dữ liệu đầu vào: term_code hoặc teacher_id");
@@ -208,7 +212,7 @@ export const exportTeacherExcel = async (req, res) => {
             "Họ và tên",
             "Lớp",
             "Khoa",
-            "Khoa",
+            "Khóa",
             "TC1",
             "TC2",
             "TC3",
@@ -225,7 +229,7 @@ export const exportTeacherExcel = async (req, res) => {
             { key: "hoten", width: 25 },
             { key: "lop", width: 12 },
             { key: "khoa", width: 10 },
-            { key: "khoa2", width: 10 },
+            { key: "khoas", width: 10 },
             { key: "tc1", width: 8 },
             { key: "tc2", width: 8 },
             { key: "tc3", width: 8 },
@@ -249,11 +253,11 @@ export const exportTeacherExcel = async (req, res) => {
                 item.class_code,
                 item.faculty_name,
                 "",
-                "",
-                "",
-                "",
-                "",
-                "",
+                item.tc1 || 0,
+                item.tc2 || 0,
+                item.tc3 || 0,
+                item.tc4 || 0,
+                item.tc5 || 0,
                 item.total_score,
                 "",
                 item.rank
