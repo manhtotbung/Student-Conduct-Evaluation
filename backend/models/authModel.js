@@ -93,16 +93,3 @@ export const getFacultyById = async (facultyId) => {
   const { rows } = await pool.query(query, [facultyId]);
   return rows[0] || null;
 };
-
-/**
- * Cập nhật last login
- */
-export const updateLastLogin = async (userId) => {
-  // Nếu bảng có cột last_login_at, uncomment đoạn này
-  // const query = `
-  //   UPDATE auth.user_accounts 
-  //   SET last_login_at = NOW()
-  //   WHERE id = $1
-  // `;
-  // await pool.query(query, [userId]);
-};

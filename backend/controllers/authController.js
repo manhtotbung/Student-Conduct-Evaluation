@@ -4,8 +4,7 @@ import {
   getUserByUsername,
   getStudentById,
   getTeacherById,
-  getFacultyById,
-  updateLastLogin
+  getFacultyById
 } from '../models/authModel.js';
 
 const ACCESS_TOKEN_TTL = '500m'; //thoi gian song cua access token
@@ -94,9 +93,6 @@ export const login = async (req, res, next) => { // Thêm next để chuyển l�
             process.env.ACCESS_TOKEN_SECRET, 
             {expiresIn: ACCESS_TOKEN_TTL }
     );
-
-    // Cập nhật last login (nếu có)
-    await updateLastLogin(user.id);
 
     //trả về token cho client
     res.json({
