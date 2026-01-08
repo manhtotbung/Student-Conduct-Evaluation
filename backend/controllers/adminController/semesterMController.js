@@ -57,7 +57,7 @@ export const createAdminTerm = async (req, res, next) => {
   ) {
     return res.status(400).json({ error: "Thiếu dữ liệu đầu vào" });
   }
-  if (![1, 2, 3].includes(semester)) {
+  if (![1, 2].includes(semester)) {
     return res.status(400).json({ error: "Học kì không hợp lệ" });
   }
   // Kiểm tra ngày kết thúc phải sau ngày bắt đầu

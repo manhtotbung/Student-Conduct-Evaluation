@@ -40,7 +40,7 @@ export const postAcceptStudent = async (req, res) => {
     const lock = await postLockAss(student_id, term);
     res.json(rows);
   } catch (error) {
-    if (error.status === 403) return res.status(403).json({ error: "Cảnh báo", message: error.message });
+   if (error.status === 403) return res.status(403).json({ error: "Tất cả sinh viên tự đánh giá mới được duyệt"});
 
     console.error('Lỗi ở acceptAssessment', error);
     res.status(500).json({ message: 'Lỗi hệ thống' });
