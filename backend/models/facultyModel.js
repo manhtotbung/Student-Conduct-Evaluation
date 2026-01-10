@@ -22,7 +22,7 @@ export const listStudentsByFacultyAndTerm = async (faculty_id, term) => {
     LEFT JOIN drl.assessment_history ah_faculty 
       ON ah_faculty.student_id = s.id AND ah_faculty.term_code = $2 AND ah_faculty.role = 'faculty'
     WHERE c.faculty_id = $1
-     AND COALESCE(st.is_teacher_approved, false) = true
+    -- AND COALESCE(st.is_teacher_approved, false) = true
     ORDER BY c.name, s.student_code
     `,
     [faculty_id, term]

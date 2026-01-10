@@ -77,6 +77,23 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
       return;
     }
 
+    // Kiểm tra BẮT BUỘC: TẤT CẢ các lớp phải được giáo viên duyệt trước
+    const classesNotReady = uniqueClasses.filter(className => {
+      const classStudents = classes.filter(c => c.class_name === className);
+      // Kiểm tra xem có ít nhất 1 sinh viên trong lớp có teacher_score
+      return !classStudents.some(student => student.teacher_score > 0);
+    });
+
+    if (classesNotReady.length > 0) {
+      alert(
+        `Không thể duyệt!\n\n` +
+        `Có ${classesNotReady.length} lớp chưa được giáo viên duyệt:\n` +
+        `${classesNotReady.join(', ')}\n\n` +
+        `Vui lòng đợi giáo viên duyệt tất cả các lớp trước khi thực hiện duyệt.`
+      );
+      return;
+    }
+
     const confirmed = window.confirm(
       `Bạn có chắc chắn muốn duyệt tất cả ${uniqueClasses.length} lớp?\n\n` +
       'Sau khi duyệt, bạn sẽ không thể chỉnh sửa hoặc duyệt lại được nữa.'
@@ -216,6 +233,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                   <th style={{ borderBottom: "none" }}>MSV</th>
                   <th style={{ borderBottom: "none" }}>Họ Tên</th>
                   <th style={{ borderBottom: "none" }}>Lớp</th>
+                  <th className="text-center" style={{ borderBottom: "none" }}>Trạng thái GV</th>
                   <th className="text-center" style={{ borderBottom: "none" }}>Tổng điểm (gv)</th>
                   <th className="text-center" style={{ borderBottom: "none" }}>Tổng điểm (khoa)</th>
                   <th style={{ borderBottom: "none" }}></th>
@@ -229,6 +247,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                   <th></th>
                   <th></th>
                   <th></th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -237,6 +256,13 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                     <td>{c.student_code}</td>
                     <td>{c.full_name}</td>
                     <td>{c.class_name}</td>
+                    <td className='text-center'>
+                      {c.teacher_score > 0 ? (
+                        <span className="badge bg-success">Đã duyệt</span>
+                      ) : (
+                        <span className="badge bg-warning">Chờ duyệt</span>
+                      )}
+                    </td>
                     <td className='text-center'>{c.teacher_score || 0}</td>
                     <td className='text-center'>{c.faculty_score || c.teacher_score || 0}</td>
                     <td className="text-end">
