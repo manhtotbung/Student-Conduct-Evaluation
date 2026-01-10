@@ -11,11 +11,13 @@ export const getStudents = async (teacherId, term, client = pool) => {
       c.class_code,
       ah.total_score, 
       ahSV.total_score as old_score, 
-      ah.note
+      ah.note,
+      COALESCE(st.is_leader_approved, false) as is_leader_approved
       FROM ref.classes c
       JOIN ref.students s ON s.class_id = c.id
       LEFT JOIN drl.assessment_history ahSV ON ahSV.student_id = s.id AND ahSV.term_code = $2 and ahSV.role ='leader'
       LEFT JOIN drl.assessment_history ah ON ah.student_id = s.id AND ah.term_code = $2 and ah.role ='teacher'
+      LEFT JOIN drl.class_term_status st ON c.id = st.class_id AND st.term_code = $2
       WHERE c.teacher_id = $1
       ORDER BY c.name, s.student_code`;
 

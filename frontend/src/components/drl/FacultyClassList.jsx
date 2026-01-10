@@ -79,8 +79,8 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
     // Kiểm tra BẮT BUỘC: TẤT CẢ các lớp phải được giáo viên duyệt trước
     const classesNotReady = uniqueClasses.filter(className => {
       const classStudents = classes.filter(c => c.class_name === className);
-      // Kiểm tra xem có ít nhất 1 sinh viên trong lớp có teacher_score
-      return !classStudents.some(student => student.teacher_score > 0);
+      // Kiểm tra xem lớp đã được giáo viên duyệt chưa
+      return !classStudents.some(student => student.is_teacher_approved);
     });
 
     if (classesNotReady.length > 0) {
@@ -256,7 +256,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                     <td>{c.full_name}</td>
                     <td>{c.class_name}</td>
                     <td className='text-center'>
-                      {c.teacher_score > 0 ? (
+                      {c.is_teacher_approved ? (
                         <span className="badge bg-success">Đã duyệt</span>
                       ) : (
                         <span className="badge bg-warning">Chờ duyệt</span>
