@@ -82,6 +82,18 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
       return;
     }
 
+    // Kiểm tra BẮT BUỘC: TẤT CẢ sinh viên phải được lớp trưởng duyệt trước
+    const notApprovedByLeader = students.filter(s => !s.is_leader_approved);
+    if (notApprovedByLeader.length > 0) {
+      alert(
+        `Không thể duyệt!\n\n` +
+        `Có ${notApprovedByLeader.length} sinh viên chưa được lớp trưởng duyệt:\n` +
+        `${notApprovedByLeader.map(s => `${s.student_code} - ${s.full_name}`).join('\n')}\n\n` +
+        `Vui lòng đợi lớp trưởng duyệt tất cả sinh viên trước khi duyệt.`
+      );
+      return;
+    }
+
     const confirmed = window.confirm(
       'Bạn có chắc chắn muốn duyệt điểm cho tất cả sinh viên?\n\n' +
       'Sau khi duyệt, bạn sẽ không thể chỉnh sửa hoặc duyệt lại được nữa.'
@@ -184,6 +196,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
           <tr>
             <th style={{ borderBottom: "none" }}>MSV</th>
             <th style={{ borderBottom: "none" }}>Họ tên</th>
+            <th className="text-center" style={{ borderBottom: "none" }}>Trạng thái LT</th>
             <th className="text-center" style={{ borderBottom: "none" }}>Tổng điểm</th>
             <th className="text-center" style={{ borderBottom: "none" }}>Tổng điểm mới</th>
             <th style={{ borderBottom: "none" }}></th>
@@ -196,6 +209,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
             <th></th>
             <th></th>
             <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -203,6 +217,13 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
             <tr key={s.student_code}>
               <td>{s.student_code}</td>
               <td>{s.full_name}</td>
+              <td className='text-center'>
+                {s.is_leader_approved ? (
+                  <span className="badge bg-success">Đã duyệt</span>
+                ) : (
+                  <span className="badge bg-warning">Chờ duyệt</span>
+                )}
+              </td>
               <td className="text-center">{s.old_score ?? 0}</td>
               <td className="text-center">{s.total_score ?? (s.old_score ?? 0)}</td>
               <td className="text-end">

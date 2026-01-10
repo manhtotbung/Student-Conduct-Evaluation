@@ -78,7 +78,7 @@ export const login = async (req, res, next) => { // Thêm next để chuyển l�
       user_id: user.id,
       username: user.username,
       role: primaryRole,
-      // roles: roles, // -> Bỏ, ít dùng
+      // roles: roles, 
       student_id: user.student_id,
       teacher_id: user.teacher_id,
       faculty_id: user.faculty_id, 
