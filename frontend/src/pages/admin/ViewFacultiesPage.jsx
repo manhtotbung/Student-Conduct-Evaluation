@@ -162,7 +162,7 @@ const ViewFacultiesPage = () => {
           onClick={handleApprove}
           disabled={loading || faculties.length === 0}
         >
-          Duyệt
+          Duyệt tất cả
         </Button>
       </div>
       {selectedStudent && (
