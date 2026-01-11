@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useOutletContext, NavLink } from 'react-router-dom';
 import { Card, Form, Offcanvas, ListGroup } from 'react-bootstrap'; // Import components
 import useAuth from '../hooks/useAuth';
@@ -18,7 +18,6 @@ const DashboardLayout = () => {
         key: 'class-leader',
         path: '/class-leader',
         text: 'Quản lý lớp',
-        icon: 'bi-star-fill'
       }
     ];
   }
@@ -30,7 +29,7 @@ const DashboardLayout = () => {
   const [selectedTerm, setSelectedTerm] = useState('');
   const [loadingTerms, setLoadingTerms] = useState(true);
 
-  const fetchTerms = async () => {
+  const fetchTerms = useCallback(async () => {
     setLoadingTerms(true);
     try {
       const termsData = await getTerms();
@@ -51,11 +50,11 @@ const DashboardLayout = () => {
       setSelectedTerm('');
     }
     setLoadingTerms(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchTerms();
-  }, []);
+  }, [fetchTerms]);
 
   return (
     <>
@@ -114,16 +113,16 @@ const DashboardLayout = () => {
             ))}
             {/* Nút Đăng xuất */}
             <ListGroup.Item
-              as="a" // Dùng as="a" hoặc as={Button}
+              as="a" 
               href="#logout"
               onClick={(e) => {
                 e.preventDefault();
                 logout();
               }}
-              action // Thêm action
-              className="text-danger" // Giữ màu đỏ
+              action
+              className="text-danger"
             >
-              <i className="bi bi-box-arrow-right me-2"></i>Đăng xuất
+              Đăng xuất
             </ListGroup.Item>
           </ListGroup>
         </Offcanvas.Body>
@@ -142,7 +141,6 @@ const DashboardLayout = () => {
   );
 };
 
-// Hook useTerm giữ nguyên
 export const useTerm = () => {
   return useOutletContext();
 };

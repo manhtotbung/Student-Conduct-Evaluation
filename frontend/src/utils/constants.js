@@ -11,14 +11,14 @@ export const MENUS = {
       path: "/history",
       icon: "bi-archive-fill",
       text: "Lịch sử đánh giá",
-    }, // Đã sửa
+    },
   ],
   teacher: [
     {
       key: "view-students",
       path: "/teacher/students",
       icon: "bi-people",
-      text: "SV các lớp phụ trách",
+      text: "Quản lý sinh viên",
     },
     {
       key: "manage-class-leader",
@@ -32,7 +32,7 @@ export const MENUS = {
       key: "view-classes",
       path: "/faculty/classes",
       icon: "bi-people",
-      text: "Tổng hợp theo lớp",
+      text: "Quản lý sinh viên",
     },
   ],
   admin: [
@@ -40,13 +40,13 @@ export const MENUS = {
       key: "view-faculties",
       path: "/admin/faculties",
       icon: "bi-building",
-      text: "Tổng hợp theo khoa",
+      text: "Quản lý sinh viên",
     },
     {
       key: "view-students",
       path: "/admin/search",
       icon: "bi-binoculars",
-      text: "Tìm & xem SV",
+      text: "Tìm kiếm",
     },
     {
       key: "admin-criteria",
@@ -60,13 +60,12 @@ export const MENUS = {
       icon: "bi bi-tags-fill",
       text: "Quản lý nhóm tiêu chí",
     },
-    // --- DÒNG QUAN TRỌNG ĐÂY ---
+
     {
       key: "manage-terms",
       path: "/admin/terms",
       icon: "bi-calendar-event-fill",
       text: "Quản lý học kỳ",
     },
-    // --- HẾT ---
   ],
 };

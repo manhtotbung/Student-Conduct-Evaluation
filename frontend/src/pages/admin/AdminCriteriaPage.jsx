@@ -403,7 +403,7 @@ const AdminCriteriaPage = () => {
           onClick={() => setShowCopyModal(true)}
           disabled={loading}
         >
-          <i className="bi bi-clipboard-plus me-1"></i> Sao chép từ kỳ trước
+          Sao chép từ kỳ trước
         </Button>
       </div>
 
@@ -539,26 +539,8 @@ const AdminCriteriaPage = () => {
                       </Form.Group>
                     </Col>
 
-                    {/* Loại tiêu chí */}
-                    <Col md={6}>
-                      <Form.Group>
-                        <Form.Label size="sm">Loại</Form.Label>
-                        <Form.Select
-                          name="type"
-                          size="sm"
-                          value={currentCriterion.type || 'radio'}
-                          onChange={(e) => {
-                            handleFormChange(e);
-                            if (e.target.value === 'radio' && (!currentCriterion.options || currentCriterion.options.length === 0)) { addOptRow(); }
-                          }}
-                        >
-                          <option value="radio">Radio (Lựa chọn)</option>
-                          <option value="text">Text (Nhập liệu)</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
                     {/* Điểm tối đa */}
-                    <Col md={6}>
+                    <Col md={12}>
                       <Form.Group>
                         <Form.Label size="sm">Điểm tối đa *</Form.Label>
                         <Form.Control
@@ -596,7 +578,7 @@ const AdminCriteriaPage = () => {
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <div className="fw-semibold small">Các lựa chọn</div>
                       <Button size="sm" className="btn-main" variant='success' onClick={addOptRow}>
-                        <i className="bi bi-plus-lg me-1"></i>Thêm
+                        Thêm
                       </Button>
                     </div>
                     <div className="table-responsive">
@@ -675,7 +657,7 @@ const AdminCriteriaPage = () => {
                   </Button>
                 )}
                 <Button className="btn-main" variant='success' size="sm" type="button" disabled={isSaving} onClick={handleSave}>
-                  {isSaving ? <Spinner animation="border" size="sm" className="me-1" /> : <i className="bi bi-save me-1"></i>}
+                  {isSaving && <Spinner animation="border" size="sm" className="me-1" />}
                   Lưu Tiêu chí
                 </Button>
               </Card.Footer>
@@ -684,7 +666,6 @@ const AdminCriteriaPage = () => {
             // Hướng dẫn khi chưa chọn
             <Card>
               <Card.Body className="text-center text-muted p-5">
-                <i className="bi bi-pencil-square fs-3"></i>
                 <p className="mt-2">Hãy chọn một tiêu chí từ danh sách bên trái để xem/sửa chi tiết, hoặc bấm "**Thêm tiêu chí**" để tạo mới.</p>
               </Card.Body>
             </Card>
@@ -724,7 +705,7 @@ const AdminCriteriaPage = () => {
             <Form.Control type="text" value={currentTargetTerm} disabled />
           </Form.Group>
           <Alert variant="warning" className="small mt-3 mb-0">
-            <i className="bi bi-exclamation-triangle-fill me-1"></i>
+            
             <strong>Lưu ý:</strong> Hành động này sẽ thất bại nếu kỳ đích ({currentTargetTerm}) đã có sẵn tiêu chí.
           </Alert>
         </Modal.Body>
@@ -735,7 +716,7 @@ const AdminCriteriaPage = () => {
             onClick={handleCopyCriteria}
             disabled={isCopying || !sourceTerm || sourceTermOptions.length === 0}
           >
-            {isCopying ? <Spinner animation="border" size="sm" className="me-1" /> : <i className="bi bi-clipboard-plus me-1"></i>}
+            {isCopying && <Spinner animation="border" size="sm" className="me-1" />}
             Sao chép
           </Button>
         </Modal.Footer>

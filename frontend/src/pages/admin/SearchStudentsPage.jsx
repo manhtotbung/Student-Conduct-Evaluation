@@ -101,7 +101,7 @@ const SearchStudentsPage = () => {
               {/* Nút Tìm */}
               <Col md={2}>
                 <Button type="submit" size="sm" variant='success' className="w-100 btn-main" disabled={loading}>
-                  {loading ? <Spinner animation="border" size="sm" className="me-1" /> : <i className="bi bi-search me-1"></i>}
+                  {loading && <Spinner animation="border" size="sm" className="me-1" />}
                   Tìm
                 </Button>
               </Col>

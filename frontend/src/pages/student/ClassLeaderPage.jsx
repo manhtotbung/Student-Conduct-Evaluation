@@ -8,7 +8,6 @@ import StudentAssessmentModal from '../../components/drl/StudentAssessmentModal'
 
 const ClassLeaderPage = () => {
   const { term } = useTerm();
-  // const { user } = useAuth(); // Not used
   const { notify } = useNotify();
 
   const [isClassLeader, setIsClassLeader] = useState(false);
@@ -19,41 +18,7 @@ const ClassLeaderPage = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
 
-  useEffect(() => {
-    checkLeaderRole();
-  }, []);
-
-  const loadLockStatus = useCallback(async () => {
-    try {
-      const data = await getClassLeaderLockStatus(term);
-      setIsLocked(data.isLocked);
-    } catch (error) {
-      console.error('Lỗi khi tải trạng thái khóa:', error);
-    }
-  }, [term]);
-
-  const loadStudents = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getClassLeaderStudents(term);
-      setStudents(data);
-    } catch (error) {
-      setError('Lỗi khi tải danh sách sinh viên: ' + error.message);
-      notify('Lỗi khi tải danh sách sinh viên', 'danger');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isClassLeader && term) {
-      loadStudents();
-      loadLockStatus();
-    }
-  }, [isClassLeader, term, loadLockStatus]);
-
-  const checkLeaderRole = async () => {
+  const checkLeaderRole = useCallback(async () => {
     try {
       const data = await checkClassLeaderRole();
       setIsClassLeader(data.is_class_leader);
@@ -70,7 +35,41 @@ const ClassLeaderPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkLeaderRole();
+  }, [checkLeaderRole]);
+
+  const loadLockStatus = useCallback(async () => {
+    try {
+      const data = await getClassLeaderLockStatus(term);
+      setIsLocked(data.isLocked);
+    } catch (error) {
+      console.error('Lỗi khi tải trạng thái khóa:', error);
+    }
+  }, [term]);
+
+  const loadStudents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getClassLeaderStudents(term);
+      setStudents(data);
+    } catch (error) {
+      setError('Lỗi khi tải danh sách sinh viên: ' + error.message);
+      notify('Lỗi khi tải danh sách sinh viên', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  }, [term, notify]);
+
+  useEffect(() => {
+    if (isClassLeader && term) {
+      loadStudents();
+      loadLockStatus();
+    }
+  }, [isClassLeader, term, loadLockStatus, loadStudents]);
 
   const handleAccept = async () => {
     if (window.confirm('Bạn có chắc chắn muốn duyệt điểm cho toàn bộ lớp? Sau khi duyệt, bạn sẽ không thể chỉnh sửa thêm.')) {
@@ -98,7 +97,7 @@ const ClassLeaderPage = () => {
     return (
       <Container>
         <Alert variant="warning">
-          <i className="bi bi-exclamation-triangle me-2"></i>
+          
           Bạn không có quyền truy cập trang này. Chỉ lớp trưởng mới có thể xem và sửa điểm của sinh viên trong lớp.
         </Alert>
       </Container>

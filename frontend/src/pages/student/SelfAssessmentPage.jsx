@@ -25,8 +25,7 @@ const SelfAssessmentPage = () => {
   const [latestTermScore, setLatestTermScore] = useState(null);
 
   // Hàm kiểm tra và hiển thị cảnh báo dựa trên điểm kỳ gần nhất
-
-  const checkWarning = (score) => {
+  const checkWarning = useCallback((score) => {
     const warningKey = `warning_shown_${term}`;
     const hasShown = sessionStorage.getItem(warningKey);
 
@@ -45,7 +44,7 @@ const SelfAssessmentPage = () => {
       setShowWarning(true);
       sessionStorage.setItem(warningKey, 'true');
     }
-  };
+  }, [term]);
 
   // Hàm tải dữ liệu (tiêu chí, điểm đã lưu, trạng thái kỳ)
   const fetchData = useCallback(async () => {
@@ -75,7 +74,7 @@ const SelfAssessmentPage = () => {
       setIsActive(false);
     }
     setLoading(false);
-  }, [term, user?.student_code]);
+  }, [term, user?.student_code, checkWarning]);
 
   // Gọi fetchData khi component mount hoặc fetchData thay đổi
   useEffect(() => {
@@ -160,7 +159,7 @@ const SelfAssessmentPage = () => {
       </div>
       {!isActive && (
         <Alert variant="warning">
-          <i className="bi bi-lock-fill me-2"></i> Kỳ đánh giá này đã được **khóa**. Bạn không thể chỉnh sửa.
+          Kỳ đánh giá này đã được **khóa**. Bạn không thể chỉnh sửa.
         </Alert>
       )}
 

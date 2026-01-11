@@ -161,7 +161,7 @@ const ManageTermsPage = () => {
                        disabled={isUpdating}
                        className="me-1"
                      >
-                       <i className="bi bi-pencil-square"></i> Sửa
+                       Sửa
                      </Button>
                      {/* Nút Xóa */}
                      <Button
@@ -170,7 +170,7 @@ const ManageTermsPage = () => {
                        onClick={() => handleDeleteTerm(t.code)}
                        disabled={isUpdating}
                      >
-                        <i className="bi bi-trash"></i> Xóa
+                        Xóa
                      </Button>
                    </td>
                  </tr>
@@ -188,7 +188,7 @@ const ManageTermsPage = () => {
           <b>QUẢN LÝ HỌC KỲ & TRẠNG THÁI ĐÁNH GIÁ</b>
         </div>
         <Button size="sm" className="btn-main" variant='success' onClick={() => handleOpenModal(null)}>
-          <i className="bi bi-plus-lg me-1"></i> Thêm Học kỳ
+          Thêm Học kỳ
         </Button>
       </div>
 

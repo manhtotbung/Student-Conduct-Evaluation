@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Table, Form, Button, Spinner, Badge, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import useNotify from '../../hooks/useNotify';
@@ -31,21 +31,6 @@ const CriterionRow = ({ c, saved, onChange, readOnly }) => {
     ));
   }
 
-  // Xử lý tiêu chí loại 'text'
-  if (c.type === 'text') {
-    return (
-      <Form.Control // Dùng Form.Control với as="textarea"
-        as="textarea"
-        size="sm"
-        value={saved.text_value || ''}
-        placeholder="Nhập nội dung/ghi chú (nếu có)..."
-        disabled={readOnly}
-        onChange={(e) => onChange(c.id, { text_value: e.target.value, self_score: 0, option_id: null })}
-        rows={2}
-      />
-    );
-  }
-
   return null;
 };
 
@@ -66,15 +51,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
     ]));
   }, [selfData]);
 
-  useEffect(() => {
-    setFormState(selfMap);
-    // Load existing evidence for criteria that require it
-    if (studentCode && termCode) {
-      loadExistingEvidence();
-    }
-  }, [selfMap, studentCode, termCode]);
-
-  const loadExistingEvidence = async () => {
+  const loadExistingEvidence = useCallback(async () => {
     if (!studentCode || !termCode) return;
     
     const criteriaWithEvidence = criteria.filter(c => c.requires_evidence);
@@ -101,7 +78,15 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
     }
     
     setExistingEvidence(evidenceData);
-  };
+  }, [studentCode, termCode, criteria]);
+
+  useEffect(() => {
+    setFormState(selfMap);
+    // Load existing evidence for criteria that require it
+    if (studentCode && termCode) {
+      loadExistingEvidence();
+    }
+  }, [selfMap, studentCode, termCode, loadExistingEvidence]);
 
   const totalScore = useMemo(() => {
     return Object.values(formState)
@@ -150,7 +135,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
       
     } catch (error) {
       console.error('Lỗi upload minh chứng:', error);
-      alert('Lỗi khi upload file: ' + (error.response?.data?.error || error.message));
+      notify('Lỗi khi upload file: ' + (error.response?.data?.error || error.message), 'danger');
     } finally {
       setUploadingEvidence(prev => ({ ...prev, [criterion_id]: false }));
     }
@@ -173,7 +158,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
       
     } catch (error) {
       console.error('Lỗi xóa minh chứng:', error);
-      alert('Lỗi khi xóa file: ' + (error.response?.data?.error || error.message));
+      notify('Lỗi khi xóa file: ' + (error.response?.data?.error || error.message), 'danger');
     }
   };
 
@@ -224,7 +209,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
   return (
     <Form onSubmit={handleSubmit}>
       {/* Thay thế div.table-responsive bằng Table responsive */}
-      <div className="table-responsive" style={{ maxHeight: page=="SelfAssessmentPage" ? '70vh' : '55vh'   }}>
+      <div className="table-responsive" style={{ maxHeight: page==="SelfAssessmentPage" ? '70vh' : '55vh'   }}>
         <Table bordered size="sm" className="align-middle mb-0">
           <thead>
             <tr className="text-center table-success text-white">
@@ -310,7 +295,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
                                       }}
                                       onClick={() => handleDeleteEvidence(c.id, evidence.id)}
                                     >
-                                      <i class="fa-solid fa-trash-can"></i>
+                                      <i className="fa-solid fa-trash-can"></i>
                                     </Button>
                                   )}
                                   <div className="text-center mt-1">
@@ -379,7 +364,7 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
             {isSaving ? (
               <><Spinner animation="border" size="sm" className="me-1" /> Đang lưu...</> // Dùng Spinner component
             ) : (
-              <><i className="bi bi-send-check me-1"></i> Lưu đánh giá</>
+              <>Lưu đánh giá</>
             )}
           </Button>
         )}
