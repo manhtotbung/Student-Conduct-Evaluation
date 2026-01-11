@@ -133,6 +133,7 @@ const ViewFacultiesPage = () => {
                   variant='success'
                   className="btn-main"
                   onClick={() => setSelectedStudent({ code: f.student_code, note: f.note })}
+                  disabled={!f.is_faculty_approved}
                 >
                   Xem/Sửa
                 </Button>

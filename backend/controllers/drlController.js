@@ -1,5 +1,6 @@
 import { getCriteria, getHistoryAss, postSelfAssessment, getAssessmentNotes } from '../models/drlModel.js';
 import { getSelfAssessment_student } from '../models/drlModel.js';
+import { checkEditAccess } from '../models/facultyModel.js';
 
 export const getCriteriaController = async (req, res) => {
   const { term } = req.query;
@@ -42,7 +43,7 @@ export const getSelfAssessment = async (req, res) => {
 
 export const saveSelfAssessment = async (req, res) => {
   const { term_code, items, note} = req.body || {};
-  const {user_id} = req.user; // Lấy role từ req.user (authMiddleware hàm protectedRoute)
+  const {user_id, faculty_id} = req.user; // Lấy role từ req.user (authMiddleware hàm protectedRoute)
 
   const role = req.body?.role || req.user?.role;
 
@@ -60,6 +61,21 @@ export const saveSelfAssessment = async (req, res) => {
 
   if (!student_code || !term_code || !Array.isArray(items)) {
     return res.status(400).json({ error: "Thiếu dữ liệu đầu vào" });
+  }
+
+   // Kiểm tra quyền nếu role là faculty
+  if (role === 'faculty') {
+    const { in_faculty, is_teacher_approved, is_faculty_approved } = await checkEditAccess(student_code, faculty_id, term_code);
+    
+    if (!in_faculty) {
+      return res.status(403).json({ error: 'Sinh viên không thuộc khoa này' });
+    }
+    if (!is_teacher_approved) {
+      return res.status(400).json({ error: 'Giáo viên chưa chốt điểm lớp này, Khoa chưa thể chỉnh sửa.' });
+    }
+    if (is_faculty_approved) {
+      return res.status(403).json({ error: 'Khoa đã duyệt lớp này, không thể chỉnh sửa thêm.' });
+    }
   }
 
    try {
