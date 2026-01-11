@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Card, Button, Table, Badge, Alert } from 'react-bootstrap';
 import { getAllTeacherStudents, getClassLeader, assignClassLeader, removeClassLeader } from '../../services/drlService';
 import { useTerm } from '../../layout/DashboardLayout';
@@ -17,13 +17,7 @@ const ManageClassLeaderPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (term && user?.username) {
-      loadData();
-    }
-  }, [term, user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -45,7 +39,13 @@ const ManageClassLeaderPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.username, term]);
+
+  useEffect(() => {
+    if (term && user?.username) {
+      loadData();
+    }
+  }, [term, user, loadData]);
 
   const handleAssignLeader = async (studentCode) => {
     if (!window.confirm(`Bạn có chắc muốn chỉ định sinh viên này làm lớp trưởng?`)) return;
@@ -99,7 +99,7 @@ const ManageClassLeaderPage = () => {
       {currentLeader && (
         <Alert variant="success" className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <i className="bi bi-star-fill me-2"></i>
+            
             <strong>Lớp trưởng hiện tại:</strong> {currentLeader.name} ({currentLeader.student_code})
           </div>
           <Button 
@@ -107,7 +107,7 @@ const ManageClassLeaderPage = () => {
             variant="outline-danger" 
             onClick={handleRemoveLeader}
           >
-            <i className="bi bi-x-circle me-1"></i>
+            
             Bỏ chỉ định
           </Button>
         </Alert>
@@ -115,7 +115,7 @@ const ManageClassLeaderPage = () => {
 
       {!currentLeader && (
         <Alert variant="info" className="mb-4">
-          <i className="bi bi-info-circle me-2"></i>
+          
           Lớp này chưa có lớp trưởng. Vui lòng chọn một sinh viên từ danh sách bên dưới.
         </Alert>
       )}
@@ -126,7 +126,7 @@ const ManageClassLeaderPage = () => {
         </Card.Header>
         <Card.Body className="p-0">
           <div className="alert alert-light border-0 rounded-0 mb-0 small">
-            <i className="bi bi-lightbulb me-1"></i>
+            
             <strong>Quyền của lớp trưởng:</strong> Có thể xem và sửa điểm của các sinh viên trong lớp, nhưng không có quyền duyệt điểm.
           </div>
           <Table striped hover responsive className="mb-0">

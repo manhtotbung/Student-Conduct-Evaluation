@@ -68,10 +68,10 @@ const ManageGroupsPage = () => {
                   <td>{g.code}</td><td>{g.title}</td>
                   <td className="text-end text-nowrap">
                     <Button size="sm" variant="outline-primary" className="me-1" onClick={() => handleOpenModal(g)}>
-                      <i className="bi bi-pencil-square"></i> Sửa
+                      Sửa
                     </Button>
                     <Button size="sm" variant="outline-danger" onClick={() => handleDeleteGroup(g.id, g.code)}>
-                       <i className="bi bi-trash"></i> Xóa
+                       Xóa
                     </Button>
                   </td>
                 </tr>
@@ -88,7 +88,7 @@ const ManageGroupsPage = () => {
           <b>QUẢN LÝ NHÓM TIÊU CHÍ</b>
         </div>
         <Button size="sm" variant='success' className="btn-main"  onClick={() => handleOpenModal(null)}>
-          <i className="bi bi-plus-lg me-1"></i> Thêm mới
+          Thêm mới
         </Button>
       </div>
       {renderContent()}

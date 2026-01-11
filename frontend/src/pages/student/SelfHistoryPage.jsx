@@ -55,7 +55,7 @@ const SelfHistoryPage = () => {
         to="/history"
         className="mb-3 btn btn-outline-success btn-sm"
       >
-        <i className="bi bi-arrow-left me-1"></i> Quay lại Lịch sử
+        Quay lại Lịch sử
       </Link>
 
       <div className="section-title mb-3">
@@ -104,7 +104,7 @@ const SelfHistoryPage = () => {
       </div>
 
        <div className="mt-3 text-muted small text-end">
-         <i className="bi bi-lock me-1"></i>Chế độ xem lại – **không thể chỉnh sửa**
+         Chế độ xem lại – **không thể chỉnh sửa**
        </div>
     </Container>
   );
