@@ -38,6 +38,17 @@ const ViewFacultiesPage = () => {
   }, [fetchData]);
 
   const handleApprove = async () => {
+    // Kiểm tra BẮT BUỘC: TẤT CẢ sinh viên phải được khoa duyệt trước
+    const notApprovedByFaculty = faculties.filter(f => !f.is_faculty_approved);
+    if (notApprovedByFaculty.length > 0) {
+      alert(
+        `Không thể duyệt!\n\n` +
+        `Có ${notApprovedByFaculty.length} sinh viên chưa được khoa duyệt\n\n` +
+        `Vui lòng đợi khoa duyệt tất cả sinh viên trước khi duyệt.`
+      );
+      return;
+    }
+
     const confirmed = window.confirm(
       'Bạn có chắc chắn muốn duyệt điểm cho tất cả sinh viên?\n\n' +
       'Điểm sẽ được lưu vào bảng kết quả cuối cùng.'
@@ -84,6 +95,7 @@ const ViewFacultiesPage = () => {
             <th>Họ tên</th>
             <th>Lớp</th>
             <th>Khoa</th>
+            <th className='text-center'>Trạng thái Khoa</th>
             <th className='text-center'>Tổng điểm (Khoa)</th>
             <th className='text-center'>Tổng điểm (Trường)</th>
             <th></th>
@@ -96,6 +108,7 @@ const ViewFacultiesPage = () => {
             <th></th>
             <th></th>
             <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -105,6 +118,13 @@ const ViewFacultiesPage = () => {
               <td>{f.full_name}</td>
               <td>{f.class_name}</td>
               <td>{f.faculty_name}</td>
+              <td className='text-center'>
+                {f.is_faculty_approved ? (
+                  <span className="badge bg-success">Đã duyệt</span>
+                ) : (
+                  <span className="badge bg-warning">Chờ duyệt</span>
+                )}
+              </td>
               <td className='text-center'>{f.old_score || 0}</td>
               <td className='text-center'>{f.total_score || f.old_score}</td> 
               <td>
@@ -142,8 +162,9 @@ const ViewFacultiesPage = () => {
           variant='success'
           size="sm"
           onClick={handleApprove}
+          disabled={loading || faculties.length === 0}
         >
-          Duyệt
+          Duyệt tất cả
         </Button>
       </div>
       {selectedStudent && (
