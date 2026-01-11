@@ -235,6 +235,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
                   variant='success'
                   size="sm"
                   onClick={() => setSelectedStudent({ code: s.student_code, note: s.note })}
+                  disabled={!s.is_leader_approved}
                 >
                   {page === 'teacher' && isLocked ? 'Xem' : 'Xem/Sửa'}
                 </Button>

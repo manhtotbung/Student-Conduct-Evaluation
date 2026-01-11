@@ -271,6 +271,7 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                         variant='success'
                         className="btn-main"
                         onClick={() => setSelectedStudent({ code: c.student_code, className: c.class_name, note: c.note })}
+                        disabled={!c.is_teacher_approved}
                       >
                         {user?.role === 'faculty' && lockedClasses[c.class_name] ? 'Xem' : 'Xem/Sửa'}
                       </Button>
