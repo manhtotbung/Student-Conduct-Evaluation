@@ -27,11 +27,8 @@ const LoginPage = () => {
   };
 
   return (
-    // Dùng Card với padding
     <Card className="p-3 login-card">
       <h5 className="text-center mb-3">Đăng nhập</h5>
-      
-      {/* Dùng Alert variant="danger" */}
       {error && (
         <Alert variant="danger">
           {error}

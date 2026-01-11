@@ -6,32 +6,27 @@ import useNotify from '../../hooks/useNotify';
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 const CriterionRow = ({ c, saved, onChange, readOnly }) => {
-  // Xử lý tiêu chí loại 'radio'
-  if (c.type === 'radio') {
-    return (c.options || []).map((opt, j) => (
-      <Form.Check
-        type="radio"
-        key={opt.id}
-        name={`q${c.id}`}
-        id={`q${c.id}_${j}`}
-        className="d-flex align-items-center"
-        label={
-          <span className="d-flex align-items-center">
-            <span className='ms-2'>{opt.label}</span>
-            <span className="text-muted ms-2" style={{ fontSize: "small", fontStyle: "italic" }}>
-              ({opt.score} điểm)
-            </span>
+  return (c.options || []).map((opt, j) => (
+    <Form.Check
+      type="radio"
+      key={opt.id}
+      name={`q${c.id}`}
+      id={`q${c.id}_${j}`}
+      className="d-flex align-items-center"
+      label={
+        <span className="d-flex align-items-center">
+          <span className='ms-2'>{opt.label}</span>
+          <span className="text-muted ms-2" style={{ fontSize: "small", fontStyle: "italic" }}>
+            ({opt.score} điểm)
           </span>
-        }
-        value={opt.id}
-        checked={Number(saved.option_id) === Number(opt.id)}
-        disabled={readOnly}
-        onChange={() => onChange(c.id, { option_id: opt.id, self_score: opt.score, text_value: null })}
-      />
-    ));
-  }
-
-  return null;
+        </span>
+      }
+      value={opt.id}
+      checked={Number(saved.option_id) === Number(opt.id)}
+      disabled={readOnly}
+      onChange={() => onChange(c.id, { option_id: opt.id, self_score: opt.score, text_value: null })}
+    />
+  ));
 };
 
 
@@ -39,11 +34,11 @@ const CriterionRow = ({ c, saved, onChange, readOnly }) => {
 const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = false, page, studentCode, termCode, noted }) => {
   const { notify } = useNotify();
   const [formState, setFormState] = useState({});
-  const [note, setNote] = useState(noted || ''); // State để lưu ghi chú cho từng sinh viên
-  const [uploadingEvidence, setUploadingEvidence] = useState({}); // Track upload progress
-  const [existingEvidence, setExistingEvidence] = useState({}); // Lưu file đã upload
-  const [previewImage, setPreviewImage] = useState(null); // State cho modal xem ảnh
-  const [showImageModal, setShowImageModal] = useState(false); // State hiển thị modal
+  const [note, setNote] = useState(noted || ''); 
+  const [uploadingEvidence, setUploadingEvidence] = useState({}); 
+  const [existingEvidence, setExistingEvidence] = useState({}); 
+  const [previewImage, setPreviewImage] = useState(null); 
+  const [showImageModal, setShowImageModal] = useState(false);
   const selfMap = useMemo(() => {
     return Object.fromEntries((selfData || []).map(r => [
       r.criterion_id,
@@ -208,7 +203,6 @@ const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = fal
 
   return (
     <Form onSubmit={handleSubmit}>
-      {/* Thay thế div.table-responsive bằng Table responsive */}
       <div className="table-responsive" style={{ maxHeight: page==="SelfAssessmentPage" ? '70vh' : '55vh'   }}>
         <Table bordered size="sm" className="align-middle mb-0">
           <thead>

@@ -8,7 +8,6 @@ import {
 } from '../../services/drlService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-// Template dữ liệu cho tiêu chí mới
 const newCriterionTemplate = {
   id: null, code: '', title: '', type: 'radio',
   max_points: '', options: [], requires_evidence: false
@@ -17,8 +16,6 @@ const newCriterionTemplate = {
 const AdminCriteriaPage = () => {
   const { term: currentTargetTerm } = useTerm();
   const { notify } = useNotify();
-
-  // Helper functions for validation - NOT blocking input
   const isValidInteger = (value) => {
     if (value === '' || value === null || value === undefined) return true;
     const str = String(value);
@@ -51,22 +48,22 @@ const AdminCriteriaPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- State quản lý giao diện ---
+  // State quản lý giao diện 
   const [filterGroup, setFilterGroup] = useState('');
   const [currentCriterion, setCurrentCriterion] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [touchedFields, setTouchedFields] = useState({});
 
-  // --- State cho chức năng sao chép ---
+  // State cho chức năng sao chép 
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [allTerms, setAllTerms] = useState([]);
   const [sourceTerm, setSourceTerm] = useState('');
   const [isCopying, setIsCopying] = useState(false);
 
-  // Ref để tìm kiếm form (nếu cần)
+  // Ref để tìm kiếm form
   const formRef = useRef(null);
 
-  // --- Hàm tải dữ liệu chính ---
+  // Hàm tải dữ liệu chính
   const fetchData = useCallback(async () => {
     if (!currentTargetTerm) return;
     setLoading(true);
@@ -103,12 +100,12 @@ const AdminCriteriaPage = () => {
     fetchData();
   }, [fetchData]);
 
-  // --- Xử lý đóng mở modal sao chép ---
+  // Xử lý đóng mở modal sao chép
   const handleCopyModalClose = () => {
     setShowCopyModal(false);
   };
 
-  // --- Lọc danh sách tiêu chí hiển thị bên trái ---
+  // Lọc danh sách tiêu chí hiển thị bên trái
   const filteredCriteria = useMemo(() => {
     if (!filterGroup) {
       return allCriteria.filter(c => String(c.code || '').includes('.'));
@@ -139,17 +136,7 @@ const AdminCriteriaPage = () => {
       setCurrentCriterion(prev => ({ ...prev, group_id: value, group_code: groupObj?.code || '' }));
     } else {
       setCurrentCriterion(prev => ({ ...prev, [name]: value }));
-      if (name === 'code') {
-        updateOrderFromCode(value);
-      }
     }
-  };
-
-  // --- Tự động cập nhật thứ tự dựa trên mã tiêu chí ---
-  const updateOrderFromCode = (code) => {
-    const parts = String(code || '').split('.');
-    const sub = Number(parts[parts.length - 1]?.replace(/\D/g, '')) || 0;
-    setCurrentCriterion(prev => ({ ...prev, display_order: (sub > 0 ? sub : 999) }));
   };
 
   // --- Gợi ý mã tiêu chí tiếp theo cho nhóm đang chọn ---
@@ -172,7 +159,6 @@ const AdminCriteriaPage = () => {
     });
     const newCode = `${groupCode}.${maxSub + 1}`;
     setCurrentCriterion(prev => ({ ...prev, code: newCode, group_id: gId, group_code: groupObj?.code || '' }));
-    updateOrderFromCode(newCode);
   };
 
   const handleDeleteAllCriteria = async () => {
@@ -202,15 +188,10 @@ const AdminCriteriaPage = () => {
     setTimeout(() => suggestNextCode(), 0);
   };
 
-  // --- Xử lý thay đổi trong bảng Options ---
-  // LUÔN cập nhật state, KHÔNG chặn input
   const handleOptChange = (index, field, value) => {
-    // Mark option field as touched
     setTouchedFields(prev => ({ ...prev, [`option_${index}_${field}`]: true }));
 
     const newOptions = [...(currentCriterion.options || [])];
-
-    // Lưu giá trị như người dùng nhập
     newOptions[index] = {
       ...newOptions[index],
       [field]: value
@@ -231,7 +212,6 @@ const AdminCriteriaPage = () => {
     setCurrentCriterion(prev => ({ ...prev, options: (prev.options || []).filter((_, i) => i !== index) }));
   };
 
-  // --- Xử lý Lưu tiêu chí ---
   // Validate TOÀN BỘ trước khi lưu
   const handleSave = async () => {
     const errors = [];
@@ -312,7 +292,6 @@ const AdminCriteriaPage = () => {
 
       // Convert string sang number cho các trường số
       dataToSave.max_points = Number(dataToSave.max_points);
-      dataToSave.display_order = Number(dataToSave.display_order) || 999;
       dataToSave.group_id = String(dataToSave.group_id);
       delete dataToSave.group_code;
 
@@ -325,8 +304,7 @@ const AdminCriteriaPage = () => {
           .filter(opt => opt.label?.trim())
           .map(opt => ({
             ...opt,
-            score: Number(opt.score),
-            display_order: Number(opt.display_order) || 1
+            score: Number(opt.score)
           }));
         await updateCriterionOptions(savedCriterion.id, validOptions);
       }
