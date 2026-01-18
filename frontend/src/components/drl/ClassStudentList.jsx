@@ -81,11 +81,6 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
   }, [user?.role, term]);
 
   const handleApprove = async () => {
-    if (!isTermActive) {
-      notify('Học kỳ đã đóng. Không thể duyệt!', 'warning');
-      return;
-    }
-    
     if (isLocked) {
       notify('Bạn đã duyệt rồi, không thể duyệt lại!', 'warning');
       return;
@@ -243,7 +238,6 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
                   size="sm"
                   onClick={() => setSelectedStudent({ code: s.student_code, note: s.note })}
                   disabled={!s.is_leader_approved || !isTermActive}
-                  title={!isTermActive ? "Học kỳ đã đóng" : (!s.is_leader_approved ? "Chưa được lớp trưởng duyệt" : "")}
                 >
                   {page === 'teacher' && (isLocked || !isTermActive) ? 'Xem' : 'Xem/Sửa'}
                 </Button>
@@ -278,7 +272,6 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
             size="sm"
             onClick={handleApprove}
             disabled={isLocked || !isTermActive}
-            title={!isTermActive ? "Học kỳ đã đóng" : (isLocked ? "Đã duyệt" : "")}
           >
             {isLocked ? 'Đã duyệt' : 'Duyệt'}
           </Button>

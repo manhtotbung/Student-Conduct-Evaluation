@@ -40,11 +40,6 @@ const ViewFacultiesPage = () => {
   }, [fetchData]);
 
   const handleApprove = async () => {
-    if (!isTermActive) {
-      notify('Học kỳ đã đóng. Không thể duyệt!', 'warning');
-      return;
-    }
-    
     // Kiểm tra BẮT BUỘC: TẤT CẢ sinh viên phải được khoa duyệt trước
     const notApprovedByFaculty = faculties.filter(f => !f.is_faculty_approved);
     if (notApprovedByFaculty.length > 0) {
@@ -141,7 +136,6 @@ const ViewFacultiesPage = () => {
                   className="btn-main"
                   onClick={() => setSelectedStudent({ code: f.student_code, note: f.note })}
                   disabled={!f.is_faculty_approved || !isTermActive}
-                  title={!isTermActive ? "Học kỳ đã đóng" : (!f.is_faculty_approved ? "Chưa được khoa duyệt" : "")}
                 >
                   {!isTermActive ? 'Xem' : 'Xem/Sửa'}
                 </Button>
@@ -172,7 +166,6 @@ const ViewFacultiesPage = () => {
           size="sm"
           onClick={handleApprove}
           disabled={loading || faculties.length === 0 || !isTermActive}
-          title={!isTermActive ? "Học kỳ đã đóng" : ""}
         >
           Duyệt tất cả
         </Button>

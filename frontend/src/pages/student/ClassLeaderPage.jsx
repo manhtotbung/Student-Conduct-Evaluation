@@ -74,11 +74,6 @@ const ClassLeaderPage = () => {
   }, [isClassLeader, term, loadLockStatus, loadStudents]);
 
   const handleAccept = async () => {
-    if (!isTermActive) {
-      notify('Học kỳ đã đóng. Không thể duyệt!', 'warning');
-      return;
-    }
-    
     if (window.confirm('Bạn có chắc chắn muốn duyệt điểm cho toàn bộ lớp? Sau khi duyệt, bạn sẽ không thể chỉnh sửa thêm.')) {
       try {
         await postClassLeaderAccept(term);
@@ -175,7 +170,6 @@ const ClassLeaderPage = () => {
                       note: student.note
                     })}
                     disabled={!isTermActive}
-                    title={!isTermActive ? "Học kỳ đã đóng" : ""}
                   >
                     {!isTermActive ? 'Xem' : 'Xem/Sửa'}
                   </Button>
@@ -193,7 +187,6 @@ const ClassLeaderPage = () => {
           size="sm"
           onClick={handleAccept}
           disabled={isLocked || !isTermActive}
-          title={!isTermActive ? "Học kỳ đã đóng" : (isLocked ? "Đã duyệt" : "")}
         >
           {isLocked ? 'Đã duyệt' : 'Duyệt điểm lớp'}
         </Button>

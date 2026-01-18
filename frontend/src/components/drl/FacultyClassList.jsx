@@ -70,12 +70,6 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
   };
 
   const handleApproveAll = async () => {
-    // Kiểm tra trạng thái học kỳ trước
-    if (!isTermActive) {
-      notify('Học kỳ đã đóng. Không thể duyệt!', 'warning');
-      return;
-    }
-
     // Lấy danh sách lớp duy nhất từ danh sách sinh viên
     // Chỉ lấy các lớp chưa được duyệt (chưa bị khóa)
     const uniqueClasses = [...new Set(classes.map(c => c.class_name))].filter(name => !lockedClasses[name]);
@@ -280,7 +274,6 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                         className="btn-main"
                         onClick={() => setSelectedStudent({ code: c.student_code, className: c.class_name, note: c.note })}
                         disabled={!c.is_teacher_approved || !isTermActive}
-                        title={!isTermActive ? "Học kỳ đã đóng" : (!c.is_teacher_approved ? "Chưa được giáo viên duyệt" : "")}
                       >
                         {user?.role === 'faculty' && (lockedClasses[c.class_name] || !isTermActive) ? 'Xem' : 'Xem/Sửa'}
                       </Button>
@@ -309,7 +302,6 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
             className="btn-main mt-3"
             onClick={handleApproveAll}
             disabled={loading || classes.length === 0 || !isTermActive || Object.values(lockedClasses).every(locked => locked)}
-            title={!isTermActive ? "Học kỳ đã đóng" : ""}
           >
             Duyệt tất cả
           </Button>
