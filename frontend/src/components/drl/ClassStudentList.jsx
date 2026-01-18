@@ -4,6 +4,7 @@ import { getAdminClassStudents, getFacultyClassStudents, getTeacherStudents, pos
 import LoadingSpinner from '../common/LoadingSpinner';
 import StudentAssessmentModal from './StudentAssessmentModal';
 import useAuth from '../../hooks/useAuth';
+import useTermStatus from '../../hooks/useTermStatus';
 import axios from 'axios';
 import useNotify from '../../hooks/useNotify';
 
@@ -11,6 +12,7 @@ import useNotify from '../../hooks/useNotify';
 const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStudentsLoaded, page }) => {
   const { user } = useAuth();
   const { notify } = useNotify();
+  const { isTermActive } = useTermStatus(term);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -235,9 +237,9 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
                   variant='success'
                   size="sm"
                   onClick={() => setSelectedStudent({ code: s.student_code, note: s.note })}
-                  disabled={!s.is_leader_approved}
+                  disabled={!s.is_leader_approved || !isTermActive}
                 >
-                  {page === 'teacher' && isLocked ? 'Xem' : 'Xem/Sửa'}
+                  {page === 'teacher' && (isLocked || !isTermActive) ? 'Xem' : 'Xem/Sửa'}
                 </Button>
               </td>
               <td className="text-end">
@@ -269,7 +271,7 @@ const ClassStudentList = ({ classCode, term, onListLoaded, setClassCode, onStude
             variant={isLocked ? 'secondary' : 'success'}
             size="sm"
             onClick={handleApprove}
-            disabled={isLocked}
+            disabled={isLocked || !isTermActive}
           >
             {isLocked ? 'Đã duyệt' : 'Duyệt'}
           </Button>

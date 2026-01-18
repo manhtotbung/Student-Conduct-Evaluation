@@ -3,12 +3,14 @@ import { Container, Table, Button, Badge, Alert } from 'react-bootstrap';
 import { getClassLeaderStudents, checkClassLeaderRole, postClassLeaderAccept, getClassLeaderLockStatus } from '../../services/drlService';
 import { useTerm } from '../../layout/DashboardLayout';
 import useNotify from '../../hooks/useNotify';
+import useTermStatus from '../../hooks/useTermStatus';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StudentAssessmentModal from '../../components/drl/StudentAssessmentModal';
 
 const ClassLeaderPage = () => {
   const { term } = useTerm();
   const { notify } = useNotify();
+  const { isTermActive } = useTermStatus(term);
 
   const [isClassLeader, setIsClassLeader] = useState(false);
   const [classInfo, setClassInfo] = useState(null);
@@ -167,8 +169,9 @@ const ClassLeaderPage = () => {
                       studentName: student.name,
                       note: student.note
                     })}
+                    disabled={!isTermActive}
                   >
-                    Xem/Sửa
+                    {!isTermActive ? 'Xem' : 'Xem/Sửa'}
                   </Button>
                 </td>
               </tr>
@@ -183,7 +186,7 @@ const ClassLeaderPage = () => {
           variant={isLocked ? "secondary" : "success"}
           size="sm"
           onClick={handleAccept}
-          disabled={isLocked}
+          disabled={isLocked || !isTermActive}
         >
           {isLocked ? 'Đã duyệt' : 'Duyệt điểm lớp'}
         </Button>

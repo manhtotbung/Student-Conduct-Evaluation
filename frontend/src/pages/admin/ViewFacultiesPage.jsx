@@ -5,10 +5,12 @@ import { getAdminFaculties, approveAdminAll } from '../../services/drlService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StudentAssessmentModal from '../../components/drl/StudentAssessmentModal';
 import useNotify from '../../hooks/useNotify';
+import useTermStatus from '../../hooks/useTermStatus';
 
 const ViewFacultiesPage = () => {
   const { term } = useTerm();
   const { notify } = useNotify();
+  const { isTermActive } = useTermStatus(term);
   const [faculties, setFaculties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -133,9 +135,9 @@ const ViewFacultiesPage = () => {
                   variant='success'
                   className="btn-main"
                   onClick={() => setSelectedStudent({ code: f.student_code, note: f.note })}
-                  disabled={!f.is_faculty_approved}
+                  disabled={!f.is_faculty_approved || !isTermActive}
                 >
-                  Xem/Sửa
+                  {!isTermActive ? 'Xem' : 'Xem/Sửa'}
                 </Button>
               </td>
             </tr>
@@ -163,7 +165,7 @@ const ViewFacultiesPage = () => {
           variant='success'
           size="sm"
           onClick={handleApprove}
-          disabled={loading || faculties.length === 0}
+          disabled={loading || faculties.length === 0 || !isTermActive}
         >
           Duyệt tất cả
         </Button>
