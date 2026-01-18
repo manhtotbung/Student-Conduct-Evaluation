@@ -3,12 +3,14 @@ import { Container, Table, Button, Badge, Alert } from 'react-bootstrap';
 import { getClassLeaderStudents, checkClassLeaderRole, postClassLeaderAccept, getClassLeaderLockStatus } from '../../services/drlService';
 import { useTerm } from '../../layout/DashboardLayout';
 import useNotify from '../../hooks/useNotify';
+import useTermStatus from '../../hooks/useTermStatus';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StudentAssessmentModal from '../../components/drl/StudentAssessmentModal';
 
 const ClassLeaderPage = () => {
   const { term } = useTerm();
   const { notify } = useNotify();
+  const { isTermActive } = useTermStatus(term);
 
   const [isClassLeader, setIsClassLeader] = useState(false);
   const [classInfo, setClassInfo] = useState(null);
@@ -72,6 +74,11 @@ const ClassLeaderPage = () => {
   }, [isClassLeader, term, loadLockStatus, loadStudents]);
 
   const handleAccept = async () => {
+    if (!isTermActive) {
+      notify('Học kỳ đã đóng. Không thể duyệt!', 'warning');
+      return;
+    }
+    
     if (window.confirm('Bạn có chắc chắn muốn duyệt điểm cho toàn bộ lớp? Sau khi duyệt, bạn sẽ không thể chỉnh sửa thêm.')) {
       try {
         await postClassLeaderAccept(term);
@@ -167,8 +174,10 @@ const ClassLeaderPage = () => {
                       studentName: student.name,
                       note: student.note
                     })}
+                    disabled={!isTermActive}
+                    title={!isTermActive ? "Học kỳ đã đóng" : ""}
                   >
-                    Xem/Sửa
+                    {!isTermActive ? 'Xem' : 'Xem/Sửa'}
                   </Button>
                 </td>
               </tr>
@@ -183,7 +192,8 @@ const ClassLeaderPage = () => {
           variant={isLocked ? "secondary" : "success"}
           size="sm"
           onClick={handleAccept}
-          disabled={isLocked}
+          disabled={isLocked || !isTermActive}
+          title={!isTermActive ? "Học kỳ đã đóng" : (isLocked ? "Đã duyệt" : "")}
         >
           {isLocked ? 'Đã duyệt' : 'Duyệt điểm lớp'}
         </Button>

@@ -5,10 +5,12 @@ import { getAdminFaculties, approveAdminAll } from '../../services/drlService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StudentAssessmentModal from '../../components/drl/StudentAssessmentModal';
 import useNotify from '../../hooks/useNotify';
+import useTermStatus from '../../hooks/useTermStatus';
 
 const ViewFacultiesPage = () => {
   const { term } = useTerm();
   const { notify } = useNotify();
+  const { isTermActive } = useTermStatus(term);
   const [faculties, setFaculties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,6 +40,11 @@ const ViewFacultiesPage = () => {
   }, [fetchData]);
 
   const handleApprove = async () => {
+    if (!isTermActive) {
+      notify('Học kỳ đã đóng. Không thể duyệt!', 'warning');
+      return;
+    }
+    
     // Kiểm tra BẮT BUỘC: TẤT CẢ sinh viên phải được khoa duyệt trước
     const notApprovedByFaculty = faculties.filter(f => !f.is_faculty_approved);
     if (notApprovedByFaculty.length > 0) {
@@ -133,9 +140,10 @@ const ViewFacultiesPage = () => {
                   variant='success'
                   className="btn-main"
                   onClick={() => setSelectedStudent({ code: f.student_code, note: f.note })}
-                  disabled={!f.is_faculty_approved}
+                  disabled={!f.is_faculty_approved || !isTermActive}
+                  title={!isTermActive ? "Học kỳ đã đóng" : (!f.is_faculty_approved ? "Chưa được khoa duyệt" : "")}
                 >
-                  Xem/Sửa
+                  {!isTermActive ? 'Xem' : 'Xem/Sửa'}
                 </Button>
               </td>
             </tr>
@@ -163,7 +171,8 @@ const ViewFacultiesPage = () => {
           variant='success'
           size="sm"
           onClick={handleApprove}
-          disabled={loading || faculties.length === 0}
+          disabled={loading || faculties.length === 0 || !isTermActive}
+          title={!isTermActive ? "Học kỳ đã đóng" : ""}
         >
           Duyệt tất cả
         </Button>

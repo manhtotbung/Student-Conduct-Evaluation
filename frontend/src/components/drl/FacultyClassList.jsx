@@ -6,11 +6,13 @@ import { getFacultyStudents, approveFacultyClass } from '../../services/drlServi
 import LoadingSpinner from '../common/LoadingSpinner';
 import StudentAssessmentModal from './StudentAssessmentModal';
 import useNotify from '../../hooks/useNotify';
+import useTermStatus from '../../hooks/useTermStatus';
 import axios from 'axios';
 const FacultyClassList = ({ facultyCode, setFaculty }) => {
   const { term } = useTerm();
   const { user } = useAuth();
   const { notify } = useNotify();
+  const { isTermActive } = useTermStatus(term);
 
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +70,12 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
   };
 
   const handleApproveAll = async () => {
+    // Kiểm tra trạng thái học kỳ trước
+    if (!isTermActive) {
+      notify('Học kỳ đã đóng. Không thể duyệt!', 'warning');
+      return;
+    }
+
     // Lấy danh sách lớp duy nhất từ danh sách sinh viên
     // Chỉ lấy các lớp chưa được duyệt (chưa bị khóa)
     const uniqueClasses = [...new Set(classes.map(c => c.class_name))].filter(name => !lockedClasses[name]);
@@ -271,9 +279,10 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
                         variant='success'
                         className="btn-main"
                         onClick={() => setSelectedStudent({ code: c.student_code, className: c.class_name, note: c.note })}
-                        disabled={!c.is_teacher_approved}
+                        disabled={!c.is_teacher_approved || !isTermActive}
+                        title={!isTermActive ? "Học kỳ đã đóng" : (!c.is_teacher_approved ? "Chưa được giáo viên duyệt" : "")}
                       >
-                        {user?.role === 'faculty' && lockedClasses[c.class_name] ? 'Xem' : 'Xem/Sửa'}
+                        {user?.role === 'faculty' && (lockedClasses[c.class_name] || !isTermActive) ? 'Xem' : 'Xem/Sửa'}
                       </Button>
                     </td>
                     <td className="text-end">
@@ -299,7 +308,8 @@ const FacultyClassList = ({ facultyCode, setFaculty }) => {
             variant='success'
             className="btn-main mt-3"
             onClick={handleApproveAll}
-            disabled={loading || classes.length === 0 || Object.values(lockedClasses).every(locked => locked)}
+            disabled={loading || classes.length === 0 || !isTermActive || Object.values(lockedClasses).every(locked => locked)}
+            title={!isTermActive ? "Học kỳ đã đóng" : ""}
           >
             Duyệt tất cả
           </Button>
