@@ -53,6 +53,7 @@ const CriterionRow = ({ c, saved, onChange, readOnly }) => {
 const AssessmentForm = ({ criteria, selfData, onSubmit, isSaving, readOnly = false, page, studentCode, termCode, noted }) => {
   const [formState, setFormState] = useState({});
   const [note, setNote] = useState(noted || ''); // State để lưu ghi chú cho từng sinh viên
+  const [evidenceFiles, setEvidenceFiles] = useState({}); // State lưu file minh chứng
   const [uploadingEvidence, setUploadingEvidence] = useState({}); // Track upload progress
   const [existingEvidence, setExistingEvidence] = useState({}); // Lưu file đã upload
   const [previewImage, setPreviewImage] = useState(null); // State cho modal xem ảnh
