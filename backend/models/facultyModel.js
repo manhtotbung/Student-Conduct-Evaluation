@@ -27,7 +27,7 @@ export const listStudentsByFacultyAndTerm = async (faculty_id, term) => {
     `,
     [faculty_id, term]
   );
-  
+
   return rows;
 };
 
@@ -71,7 +71,7 @@ export const approveClassByFaculty = async (class_code, faculty_id, term) => {
 
     if (!is_teacher_approved) throw new Error('TEACHER_NOT_APPROVED_YET');
     if (is_faculty_approved) throw new Error('FACULTY_ALREADY_APPROVED');
- 
+
     //Cập nhật trạng thái duyệt của khoa
     await client.query(
       `INSERT INTO drl.class_term_status (class_id, term_code, is_faculty_approved, faculty_approved_at, updated_at)

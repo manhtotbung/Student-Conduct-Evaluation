@@ -1,5 +1,5 @@
 // backend/controllers/facultyController.js
-import {listStudentsByFacultyAndTerm, approveClassByFaculty, checkEditAccess} from '../models/facultyModel.js';
+import { listStudentsByFacultyAndTerm, approveClassByFaculty, checkEditAccess } from '../models/facultyModel.js';
 import { postSelfAssessment } from '../models/drlModel.js';
 
 //lấy toàn bộ sinh viên thuộc các lớp của khoa trong một học kỳ
@@ -13,7 +13,7 @@ export const getAllFacultyStudents = async (req, res) => {
     const rows = await listStudentsByFacultyAndTerm(faculty_id, String(term).trim());
     res.json(rows);
   } catch (err) {
-    console.error('lỗi ở getAllFacultyStudents (facultycontroller):', err);  
+    console.error('lỗi ở getAllFacultyStudents (facultycontroller):', err);
     res.status(500).json({ error: 'Lỗi hệ thống!' });
   }
 };
@@ -21,7 +21,7 @@ export const getAllFacultyStudents = async (req, res) => {
 // Khoa chỉnh sửa điểm sinh viên
 export const updateStudentScore = async (req, res) => {
   const faculty_id = req.user?.faculty_id;
-  const user_id = req.user?.user_id; 
+  const user_id = req.user?.user_id;
   const { student_code, term_code, items, note } = req.body;
 
   if (!faculty_id || !student_code || !term_code || !Array.isArray(items)) {
@@ -31,7 +31,7 @@ export const updateStudentScore = async (req, res) => {
   try {
     // 1. Kiểm tra quyền (thuộc khoa + giáo viên chưa duyệt) 
     const { in_faculty, is_teacher_approved, is_faculty_approved } = await checkEditAccess(student_code, faculty_id, term_code);
-    
+
     if (!in_faculty) {
       return res.status(403).json({ error: 'Sinh viên không thuộc khoa này' });
     }
@@ -55,7 +55,7 @@ export const updateStudentScore = async (req, res) => {
 // Khoa duyệt lớp
 export const approveClass = async (req, res) => {
   const faculty_id = req.user?.faculty_id;
-  const { class_code, term } = req.body; 
+  const { class_code, term } = req.body;
 
   if (!faculty_id || !class_code || !term) {
     return res.status(400).json({ error: 'Thiếu thông tin bắt buộc (class_code, term)' });

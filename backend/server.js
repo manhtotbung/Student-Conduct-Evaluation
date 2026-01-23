@@ -14,7 +14,7 @@ import adminRoutes from "./routes/admin.js";
 import termRoutes from "./routes/term.js";
 import classLeaderRoutes from "./routes/classLeader.js";
 import { protectedRoute, requireRole } from "./middlewares/authMiddleware.js";
-import {autoLockTerm} from "./middlewares/autoLockTermMiddleware.js";
+import { autoLockTerm } from "./middlewares/autoLockTermMiddleware.js";
 import { serveEvidence } from "./controllers/evidenceController.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -50,12 +50,12 @@ app.get("/api/uploads/evidence/:filename", serveEvidence);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/terms", termRoutes);
-app.use("/api/drl", protectedRoute, requireRole('student', 'teacher', 'admin', 'faculty') , drlRoutes);
-app.use("/api/teacher",protectedRoute, requireRole('teacher'),teacherRoutes);
+app.use("/api/drl", protectedRoute, requireRole('student', 'teacher', 'admin', 'faculty'), drlRoutes);
+app.use("/api/teacher", protectedRoute, requireRole('teacher'), teacherRoutes);
 app.use("/api/teacher/class-leader", protectedRoute, requireRole('teacher'), classLeaderRoutes);
 app.use("/api/class-leader", protectedRoute, requireRole('student'), classLeaderRoutes);
-app.use("/api/faculty",protectedRoute, requireRole('faculty') ,facultyRoutes);
-app.use("/api/admin", protectedRoute, requireRole('admin'),adminRoutes);
+app.use("/api/faculty", protectedRoute, requireRole('faculty'), facultyRoutes);
+app.use("/api/admin", protectedRoute, requireRole('admin'), adminRoutes);
 
 
 // Thêm route kiểm tra db
