@@ -17,12 +17,6 @@ const ManageClassLeaderPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (term && user?.username) {
-      loadData();
-    }
-  }, [term, user, loadData]);
-
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -46,6 +40,12 @@ const ManageClassLeaderPage = () => {
       setLoading(false);
     }
   }, [user, term]);
+
+  useEffect(() => {
+    if (term && user?.username) {
+      loadData();
+    }
+  }, [term, user, loadData]);
 
   const handleAssignLeader = async (studentCode) => {
     if (!window.confirm(`Bạn có chắc muốn chỉ định sinh viên này làm lớp trưởng?`)) return;

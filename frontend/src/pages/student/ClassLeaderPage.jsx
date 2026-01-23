@@ -17,6 +17,20 @@ const ClassLeaderPage = () => {
   const [error, setError] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
+  const loadStudents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getClassLeaderStudents(term);
+      setStudents(data);
+    } catch (error) {
+      setError('Lỗi khi tải danh sách sinh viên: ' + error.message);
+      notify('Lỗi khi tải danh sách sinh viên', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  }, [term, notify]);
+
   useEffect(() => {
     checkLeaderRole();
   }, []);
@@ -45,20 +59,6 @@ const ClassLeaderPage = () => {
       setLoading(false);
     }
   };
-
-  const loadStudents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getClassLeaderStudents(term);
-      setStudents(data);
-    } catch (error) {
-      setError('Lỗi khi tải danh sách sinh viên: ' + error.message);
-      notify('Lỗi khi tải danh sách sinh viên', 'danger');
-    } finally {
-      setLoading(false);
-    }
-  }, [term, notify]);
 
   const handleModalClose = (didSave) => {
     setSelectedStudent(null);
