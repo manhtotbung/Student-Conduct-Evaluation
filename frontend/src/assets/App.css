@@ -1,0 +1,91 @@
+.navbar {
+  background: var(--main)!important;
+}
+
+.navbar .navbar-brand,
+.navbar a,
+.navbar .navbar-text {
+  color: #fff !important;
+  text-decoration: none;
+}
+
+.login-card {
+  max-width: 380px;
+  margin: auto;
+  margin-top: 10vh;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+}
+
+.section-title {
+  background: var(--main)!important;
+  color: #fff!important;
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+}
+
+.header {
+  background: var(--main);
+  color: #fff;
+}
+
+.table thead th {
+  background: #f0f3f8;
+}
+
+.menu-active {
+  color: #fff !important;
+  background: var(--main) !important;
+  border-color: var(--main) !important;
+}
+
+.menu{
+  color: black;
+  background-color: white;
+}
+
+.list-group-item.active{
+  color: white !important;
+  background: var(--main) !important;
+  border-color: var(--main) !important;
+}
+
+.muted-note {
+  font-size: 12px;
+  color: #6c757d
+}
+.showMenu {
+  margin-left: 300px;
+  transition: all 0.3s ease;
+}
+
+.hideMenu {
+  margin-left: 0;
+  transition: all 0.3s ease;
+}
+
+.sidebar-offcanvas {
+  width: 300px!important;
+  margin-top: 62.6px;
+  transition: all 0.3s ease;
+  border-right: 2px solid var(--main) !important;
+}
+
+.fa-bars{
+  color: white;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+.card-header {
+  background: var(--main);
+  color: white;
+}
+
+@media (max-width:650px) {
+  .say_hello {
+    display: none!important;
+  }
+  .ctn_body{
+    width: 100vw!important;
+  }
+}

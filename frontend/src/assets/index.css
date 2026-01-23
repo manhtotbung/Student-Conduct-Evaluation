@@ -1,0 +1,109 @@
+:root {
+  --main: #37bd74;
+
+  --main-dark: #2e9f62;
+  --soft: #f5f6f8;
+}
+
+body {
+  background: var(--soft);
+}
+
+.btn-main {
+  background: var(--main);
+  border-color: var(--main);
+  color: #fff;
+}
+
+.btn-main:hover {
+  background: var(--main-dark);
+  border-color: var(--main-dark);
+}
+
+html, body {
+  overflow-y: auto; /* Luôn cho phép cuộn dọc nếu cần */
+  height: auto;     /* Bỏ giới hạn chiều cao cố định */
+  min-height: 100%; /* Đảm bảo ít nhất bằng chiều cao màn hình */
+}
+
+#root {
+  min-height: 100vh; /* Đảm bảo #root chiếm ít nhất toàn bộ chiều cao màn hình */
+  display: flex;      /* Sử dụng flexbox để bố cục tốt hơn (tùy chọn) */
+  flex-direction: column; /* Sắp xếp con theo chiều dọc (tùy chọn) */
+}
+
+/* Đảm bảo khu vực nội dung chính có thể giãn nở */
+main {
+   flex-grow: 1; /* Cho phép main chiếm không gian còn lại (nếu dùng flexbox trên #root) */
+}
+
+/* Custom switch màu xanh lá */
+.custom-switch-green .form-check-input {
+  background-color: #ffffff;
+  border-color: #6c757d;
+}
+
+
+.custom-switch-green .form-check-input:checked {
+  background-color: var(--main);
+  border-color: var(--main);
+}
+
+.custom-switch-green .form-check-input:focus {
+  box-shadow: none;
+  border-color: var(--main);
+}
+
+.customCheck .form-check-input:checked {
+  background-color: var(--main);
+  border-color: var(--main);
+}
+.customCheck .form-check-input:focus {
+  box-shadow: none;
+  border-color: var(--main);
+}
+
+input.form-check-input{
+  cursor: pointer;
+}
+
+button.btn.btn-success, .customBadge {
+  background-color: var(--main) !important;
+  border-color: var(--main) !important;
+}
+button.btn.btn-success:hover, .customBadge:hover {
+  background-color: var(--main-dark) !important;
+  border-color: var(--main-dark) !important;
+}
+
+.modal-header {
+  background-color: var(--main);
+  color: white;
+}
+
+.btn-close {
+  filter: invert(1);
+}
+
+.fa-magnifying-glass {
+  color: var(--main);
+  cursor: pointer;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--main) !important;
+  box-shadow: 0 0 0 0.2rem rgba(55, 189, 116, 0.25)   !important;
+}
+.form-select{
+  cursor: pointer;
+}
+
+tbody, td, tfoot, th, thead, tr, .card{
+  border-color: var(--main) !important;
+}
+
+
+
+
+
+
