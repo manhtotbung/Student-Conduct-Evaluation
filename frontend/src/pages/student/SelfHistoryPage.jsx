@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Alert, Container, Button } from 'react-bootstrap'; // Import components
+import { Alert, Container } from 'react-bootstrap'; // Import components
 import useAuth from '../../hooks/useAuth';
 import { getCriteria, getSelfAssessment } from '../../services/drlService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';

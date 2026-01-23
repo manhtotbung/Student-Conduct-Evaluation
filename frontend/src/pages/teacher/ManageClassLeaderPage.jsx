@@ -21,7 +21,7 @@ const ManageClassLeaderPage = () => {
     if (term && user?.username) {
       loadData();
     }
-  }, [term, user]);
+  }, [term, user, loadData]);
 
   const loadData = async () => {
     setLoading(true);

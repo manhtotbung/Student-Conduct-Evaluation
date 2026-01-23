@@ -75,7 +75,7 @@ const SelfAssessmentPage = () => {
       setIsActive(false);
     }
     setLoading(false);
-  }, [term, user?.student_code]);
+  }, [term, user?.student_code, checkWarning]);
 
   // Gọi fetchData khi component mount hoặc fetchData thay đổi
   useEffect(() => {

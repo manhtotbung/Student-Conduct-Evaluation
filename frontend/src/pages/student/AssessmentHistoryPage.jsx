@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Table, Badge, Alert, Container, Button } from 'react-bootstrap'; // Import components
+import { Table, Badge, Alert, Container } from 'react-bootstrap'; // Import components
 import useAuth from '../../hooks/useAuth';
 import { getStudentHistory } from '../../services/drlService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';

@@ -9,7 +9,6 @@ import StudentAssessmentModal from '../../components/drl/StudentAssessmentModal'
 
 const ClassLeaderPage = () => {
   const { term } = useTerm();
-  const { user } = useAuth();
   const { notify } = useNotify();
 
   const [isClassLeader, setIsClassLeader] = useState(false);
@@ -27,7 +26,7 @@ const ClassLeaderPage = () => {
     if (isClassLeader && term) {
       loadStudents();
     }
-  }, [isClassLeader, term]);
+  }, [isClassLeader, term, loadStudents]);
 
   const checkLeaderRole = async () => {
     try {
