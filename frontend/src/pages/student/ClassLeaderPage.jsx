@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Table, Button, Badge, Alert } from 'react-bootstrap';
 import { getClassLeaderStudents, checkClassLeaderRole } from '../../services/drlService';
 import { useTerm } from '../../layout/DashboardLayout';
-import useAuth from '../../hooks/useAuth';
 import useNotify from '../../hooks/useNotify';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StudentAssessmentModal from '../../components/drl/StudentAssessmentModal';
@@ -47,7 +46,7 @@ const ClassLeaderPage = () => {
     }
   };
 
-  const loadStudents = async () => {
+  const loadStudents = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -59,7 +58,7 @@ const ClassLeaderPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [term, notify]);
 
   const handleModalClose = (didSave) => {
     setSelectedStudent(null);

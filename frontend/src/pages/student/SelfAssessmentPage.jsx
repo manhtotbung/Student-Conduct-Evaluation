@@ -26,7 +26,7 @@ const SelfAssessmentPage = () => {
 
   // Hàm kiểm tra và hiển thị cảnh báo dựa trên điểm kỳ gần nhất
 
-  const checkWarning = (score) => {
+  const checkWarning = useCallback((score) => {
     const warningKey = `warning_shown_${term}`;
     const hasShown = sessionStorage.getItem(warningKey);
 
@@ -45,7 +45,7 @@ const SelfAssessmentPage = () => {
       setShowWarning(true);
       sessionStorage.setItem(warningKey, 'true');
     }
-  };
+  }, [term]);
 
   // Hàm tải dữ liệu (tiêu chí, điểm đã lưu, trạng thái kỳ)
   const fetchData = useCallback(async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Card, Button, Table, Badge, Alert } from 'react-bootstrap';
 import { getAllTeacherStudents, getClassLeader, assignClassLeader, removeClassLeader } from '../../services/drlService';
 import { useTerm } from '../../layout/DashboardLayout';
@@ -23,7 +23,7 @@ const ManageClassLeaderPage = () => {
     }
   }, [term, user, loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -45,7 +45,7 @@ const ManageClassLeaderPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, term]);
 
   const handleAssignLeader = async (studentCode) => {
     if (!window.confirm(`Bạn có chắc muốn chỉ định sinh viên này làm lớp trưởng?`)) return;
