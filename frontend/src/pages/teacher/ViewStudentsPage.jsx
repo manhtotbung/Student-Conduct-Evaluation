@@ -1,6 +1,6 @@
 import { useTerm } from '../../layout/DashboardLayout';
 import ClassStudentList from '../../components/drl/ClassStudentList';
-import { Button, ButtonGroup, FormCheck } from 'react-bootstrap';
+import { Button, ButtonGroup, FormCheck, Container } from 'react-bootstrap';
 import { useState, useCallback } from 'react';
 
 export default function ViewStudentsPage() {
